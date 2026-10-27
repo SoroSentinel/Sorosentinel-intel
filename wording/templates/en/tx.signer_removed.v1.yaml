@@ -1,0 +1,14 @@
+# DRAFT for counsel review. Guard G-ACCOUNT-CONTROL, signer removal.
+id: tx.signer_removed.v1
+applies_to:
+  finding: G-ACCOUNT-CONTROL
+severities: [critical]
+text: >-
+  This transaction removes {removed_signer} as a signer from account
+  {account}. After it, that signer can no longer approve transactions from this
+  account.
+slots:
+  removed_signer: signer_key
+  account: account
+attribution: standard_v1
+status: draft

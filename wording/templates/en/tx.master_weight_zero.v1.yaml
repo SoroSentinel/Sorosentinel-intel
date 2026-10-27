@@ -1,0 +1,13 @@
+# DRAFT for counsel review. Guard G-ACCOUNT-CONTROL when master weight is set to 0.
+id: tx.master_weight_zero.v1
+applies_to:
+  finding: G-ACCOUNT-CONTROL
+severities: [critical]
+text: >-
+  This transaction sets the master key weight of account {account} to 0. After
+  it, the account's own key can no longer approve transactions. Only its other
+  signers can.
+slots:
+  account: account
+attribution: standard_v1
+status: draft

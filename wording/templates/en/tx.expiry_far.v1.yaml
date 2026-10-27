@@ -1,0 +1,12 @@
+# DRAFT for counsel review. Guard G-NO-EXPIRY, upper time bound far in the future.
+id: tx.expiry_far.v1
+applies_to:
+  finding: G-NO-EXPIRY
+severities: [medium]
+text: >-
+  This transaction stays valid until {max_time}. Once signed, it can be
+  submitted at any time before then.
+slots:
+  max_time: timestamp
+attribution: standard_v1
+status: draft
