@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sorosentinel:schema:v1:Finding",
+  "title": "Finding",
+  "description": "A Guard finding. User-visible text lives only in `statement` (renderer output); there are no free-text title/explanation fields.",
+  "type": "object",
+  "required": ["code", "severity", "facts"],
+  "additionalProperties": false,
+  "properties": {
+    "code": { "type": "string", "pattern": "^G-[A-Z0-9-]+$" },
+    "severity": { "enum": ["critical", "high", "medium", "low", "info"] },
+    "operation_index": { "type": "integer", "minimum": 0 },
+    "facts": { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/facts" },
+    "statement": {
+      "oneOf": [
+        { "$ref": "urn:sorosentinel:schema:v1:PublicStatement" },
+        { "type": "null" }
+      ]
+    },
+    "evidence_ref": { "type": "string", "maxLength": 200 }
+  }
+}

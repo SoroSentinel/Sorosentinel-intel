@@ -1,0 +1,13 @@
+# docs/project_structure.md §2.5. Team handles are placeholders until the
+# SoroSentinel org creates them (open question: who are counsel/security reviewers?).
+# CODEOWNERS alone accepts ANY listed owner; requiring counsel AND a maintainer
+# on wording/ needs a branch ruleset as well.
+
+*                     @SoroSentinel/maintainers
+/wording/             @SoroSentinel/counsel @SoroSentinel/maintainers
+/schemas/             @SoroSentinel/maintainers @SoroSentinel/guard-maintainers @SoroSentinel/scan-maintainers
+/internal/verdict/    @SoroSentinel/maintainers
+/internal/fetcher/    @SoroSentinel/security
+/internal/snapshot/   @SoroSentinel/security
+/deploy/              @SoroSentinel/security
+/docs/                @SoroSentinel/maintainers

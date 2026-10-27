@@ -1,0 +1,15 @@
+# Wording from PRD §5.1 example rewrites. Draft until counsel approves it in a
+# separate PR; until then the renderer refuses it and APIs return facts only.
+id: asset.lookalike.v1
+applies_to:
+  entity_type: asset
+  detector: D-ASSET-LOOKALIKE
+signal_levels: [caution, high_caution]
+text: >-
+  This asset uses the same code as {known_asset} but a different issuer
+  account. The issuer of {known_asset} is {known_issuer}. Observed {as_of}.
+slots:
+  known_asset: asset_key
+  known_issuer: account
+attribution: standard_v1
+status: draft

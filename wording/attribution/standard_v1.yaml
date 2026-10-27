@@ -1,0 +1,7 @@
+# PRD §5.1 L4 attribution block. Renderer fills every slot here; callers cannot.
+id: standard_v1
+status: draft # needs counsel review before it can render
+text: >-
+  Method: {method}, ruleset {ruleset_version}. Observed {as_of}.
+  This is an indicator, not a determination of intent or wrongdoing.
+  Methodology: {methodology_url}. Request a review: {review_url}.
