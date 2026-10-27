@@ -20,7 +20,7 @@
       "items": { "type": "string", "pattern": "^[0-9a-f]{32}$" }
     },
     "signature": {
-      "description": "TODO: define the exact signed byte string before the first snapshot is published.",
+      "description": "Ed25519 signature over the payload defined in schemas/snapshot-signing.md, standard base64.",
       "type": "string",
       "contentEncoding": "base64"
     }
