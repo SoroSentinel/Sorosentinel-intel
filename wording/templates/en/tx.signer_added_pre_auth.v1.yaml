@@ -1,0 +1,16 @@
+# DRAFT for counsel review. Guard G-SIGNER-ADDED, pre-authorized transaction signer.
+id: tx.signer_added_pre_auth.v1
+applies_to:
+  finding: G-SIGNER-ADDED
+severities: [critical]
+text: >-
+  This transaction adds a pre-authorized transaction signer to account
+  {account} with weight {weight}. It approves one specific prepared
+  transaction, identified by {signer}, for this account without a signature
+  from any key.
+slots:
+  signer: signer_key
+  account: account
+  weight: weight
+attribution: standard_v1
+status: draft
