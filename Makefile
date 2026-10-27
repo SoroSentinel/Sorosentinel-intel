@@ -3,7 +3,7 @@
 
 GO ?= go
 
-.PHONY: deps fmt lint test test-contract gen verify
+.PHONY: deps fmt lint test test-contract gen docs-check verify
 
 deps:
 	$(GO) mod download
@@ -29,4 +29,8 @@ test-contract:
 gen:
 	@echo "gen: no code generator chosen yet; schemas/generated/ stays empty"
 
-verify: lint test test-contract
+# Generated AGENTS.md (and sibling copies, when checked out) match docs/.
+docs-check:
+	scripts/sync-docs.sh --check
+
+verify: lint test test-contract docs-check
