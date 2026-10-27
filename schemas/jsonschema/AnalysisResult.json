@@ -27,7 +27,13 @@
           "account": { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/canonicalKey" },
           "asset": { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/canonicalKey" },
           "delta_min": { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/stroops" },
-          "delta_max": { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/stroops" },
+          "delta_max": {
+            "description": "Best case in stroops, or null when there is no upper bound (e.g. the receiver of a strict-send path payment). delta_min is the worst case and is shown first.",
+            "oneOf": [
+              { "$ref": "urn:sorosentinel:schema:v1:common#/$defs/stroops" },
+              { "type": "null" }
+            ]
+          },
           "assurance": { "enum": ["ledger", "contract_reported"] }
         }
       }
