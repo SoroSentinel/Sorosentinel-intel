@@ -148,6 +148,21 @@ func (r *Registry) lintText(text string) (map[string]bool, []string) {
 	return used, p
 }
 
+// LintDocument checks free-standing public prose (for example the methodology
+// page) for blocked terms, reporting each hit by line.
+func (r *Registry) LintDocument(name, text string) []Problem {
+	var out []Problem
+	for i, line := range strings.Split(text, "\n") {
+		if terms := r.BlockedTerms(line); len(terms) > 0 {
+			out = append(out, Problem{
+				Where: fmt.Sprintf("%s:%d", name, i+1),
+				Msg:   "blocked terms: " + strings.Join(terms, ", "),
+			})
+		}
+	}
+	return out
+}
+
 func lintStatus(s Status) []string {
 	switch s {
 	case StatusDraft, StatusApproved, StatusRetired:
