@@ -1,0 +1,15 @@
+# DRAFT for counsel review. Guard G-SIGNER-ADDED, ed25519 and signed-payload signers.
+id: tx.signer_added.v1
+applies_to:
+  finding: G-SIGNER-ADDED
+severities: [high]
+text: >-
+  This transaction adds {signer} as a signer on account {account} with weight
+  {weight}. A signer can approve transactions from this account, alone or
+  together with other signers, depending on the account's thresholds.
+slots:
+  signer: signer_key
+  account: account
+  weight: weight
+attribution: standard_v1
+status: draft

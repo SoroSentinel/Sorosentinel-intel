@@ -1,0 +1,13 @@
+# DRAFT for counsel review. Guard G-ACCOUNT-CONTROL, threshold or weight changes.
+id: tx.account_control.v1
+applies_to:
+  finding: G-ACCOUNT-CONTROL
+severities: [critical]
+text: >-
+  This transaction changes the signing weights or thresholds of account
+  {account}. After it, a different set of signers may be required, or may be
+  enough, to approve transactions from this account.
+slots:
+  account: account
+attribution: standard_v1
+status: draft
