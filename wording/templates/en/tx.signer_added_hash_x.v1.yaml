@@ -1,0 +1,16 @@
+# DRAFT for counsel review. Guard G-SIGNER-ADDED, hash(x) signer.
+id: tx.signer_added_hash_x.v1
+applies_to:
+  finding: G-SIGNER-ADDED
+severities: [critical]
+text: >-
+  This transaction adds a hash(x) signer to account {account} with weight
+  {weight}. Anyone who learns the value behind this hash can use it to approve
+  transactions from this account. It is not tied to a visible key. Signer:
+  {signer}.
+slots:
+  signer: signer_key
+  account: account
+  weight: weight
+attribution: standard_v1
+status: draft

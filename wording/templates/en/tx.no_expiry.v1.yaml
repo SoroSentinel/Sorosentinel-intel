@@ -1,0 +1,11 @@
+# DRAFT for counsel review. Guard G-NO-EXPIRY, no upper time bound.
+id: tx.no_expiry.v1
+applies_to:
+  finding: G-NO-EXPIRY
+severities: [medium]
+text: >-
+  This transaction has no expiry time. Once signed, it stays valid until it is
+  submitted or its sequence number is used, which can be much later than now.
+slots: {}
+attribution: standard_v1
+status: draft
