@@ -1,7 +1,7 @@
 # Snapshot signing (format version 1)
 
-Status: **proposed with the first implementation; needs maintainer approval**
-(AGENTS.md §10: snapshot format). Vector: `vectors/snapshot_signing.json`.
+Status: **approved by the project owner on 2026-10-27** (AGENTS.md §10: snapshot
+format). Any change needs a new format version. Vector: `vectors/snapshot_signing.json`.
 
 The signature in `Snapshot.json` is Ed25519 over these exact bytes:
 
