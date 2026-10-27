@@ -15,7 +15,7 @@ fmt:
 lint:
 	@unformatted="$$(gofmt -l .)"; if [ -n "$$unformatted" ]; then echo "gofmt needed:"; echo "$$unformatted"; exit 1; fi
 	$(GO) vet ./...
-	$(GO) run ./cmd/wordlint -dir wording
+	$(GO) run ./cmd/wordlint -dir wording -docs docs/methodology
 
 test:
 	$(GO) test ./...
