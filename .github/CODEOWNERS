@@ -11,3 +11,4 @@
 /internal/snapshot/   @SoroSentinel/security
 /deploy/              @SoroSentinel/security
 /docs/                @SoroSentinel/maintainers
+/docs/methodology/    @SoroSentinel/counsel @SoroSentinel/maintainers

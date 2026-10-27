@@ -124,6 +124,21 @@ func TestLintCatchesBadTemplates(t *testing.T) {
 	}
 }
 
+func TestLintDocumentReportsLines(t *testing.T) {
+	reg, err := LoadEmbedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := "# Title\nThis asset is FAKE.\nA neutral line.\nIt was designed  to mislead."
+	p := reg.LintDocument("page.md", doc)
+	if len(p) != 2 || p[0].Where != "page.md:2" || p[1].Where != "page.md:4" {
+		t.Fatalf("problems = %v", p)
+	}
+	if got := reg.LintDocument("ok.md", "No signals were observed as of the stated time."); len(got) != 0 {
+		t.Fatalf("clean text flagged: %v", got)
+	}
+}
+
 func TestLintRequiresAttributionDisclaimer(t *testing.T) {
 	reg, err := NewRegistry(nil, []Attribution{{ID: "a_v1", Status: StatusApproved, Text: "{method} {as_of}"}},
 		Blocklist{Terms: []string{"scam"}})
