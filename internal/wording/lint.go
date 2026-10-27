@@ -66,12 +66,20 @@ func (r *Registry) lintTemplate(t Template) []string {
 		p = append(p, "id must look like name.part.vN")
 	}
 	p = append(p, lintStatus(t.Status)...)
-	if len(t.SignalLevels) == 0 {
-		p = append(p, "signal_levels is empty")
+	switch {
+	case len(t.SignalLevels) > 0 && len(t.Severities) > 0:
+		p = append(p, "set either signal_levels (entity signals) or severities (findings), not both")
+	case len(t.SignalLevels) == 0 && len(t.Severities) == 0:
+		p = append(p, "signal_levels is empty and no severities are set")
 	}
 	for _, l := range t.SignalLevels {
 		if !l.Valid() {
 			p = append(p, fmt.Sprintf("unknown signal level %q", l))
+		}
+	}
+	for _, s := range t.Severities {
+		if !s.valid() {
+			p = append(p, fmt.Sprintf("unknown severity %q", s))
 		}
 	}
 	if _, ok := r.attributions[t.Attribution]; !ok {

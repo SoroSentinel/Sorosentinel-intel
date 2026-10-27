@@ -33,13 +33,26 @@ type AppliesTo struct {
 }
 
 type Template struct {
-	ID           string              `yaml:"id" json:"id"`
-	AppliesTo    AppliesTo           `yaml:"applies_to" json:"applies_to"`
-	SignalLevels []signal.Public     `yaml:"signal_levels" json:"signal_levels"`
-	Text         string              `yaml:"text" json:"text"`
-	Slots        map[string]SlotType `yaml:"slots" json:"slots"`
-	Attribution  string              `yaml:"attribution" json:"attribution"`
-	Status       Status              `yaml:"status" json:"status"`
+	ID           string          `yaml:"id" json:"id"`
+	AppliesTo    AppliesTo       `yaml:"applies_to" json:"applies_to"`
+	SignalLevels []signal.Public `yaml:"signal_levels" json:"signal_levels"`
+	// Severities is set instead of SignalLevels for Guard finding templates.
+	Severities  []Severity          `yaml:"severities,omitempty" json:"severities,omitempty"`
+	Text        string              `yaml:"text" json:"text"`
+	Slots       map[string]SlotType `yaml:"slots" json:"slots"`
+	Attribution string              `yaml:"attribution" json:"attribution"`
+	Status      Status              `yaml:"status" json:"status"`
+}
+
+// Severity of a Guard finding (Finding.json). Entity signals use signal levels instead.
+type Severity string
+
+func (s Severity) valid() bool {
+	switch s {
+	case "critical", "high", "medium", "low", "info":
+		return true
+	}
+	return false
 }
 
 type Attribution struct {

@@ -23,6 +23,7 @@ type renderVectors struct {
 		Request struct {
 			TemplateID     string `json:"template_id"`
 			SignalLevel    string `json:"signal_level"`
+			Severity       string `json:"severity"`
 			AsOf           string `json:"as_of"`
 			Method         string `json:"method"`
 			RulesetVersion string `json:"ruleset_version"`
@@ -67,7 +68,7 @@ func TestRenderVectors(t *testing.T) {
 
 	for _, c := range v.Cases {
 		t.Run(c.Name, func(t *testing.T) {
-			stmt, err := renderCase(rnd, c.Request.TemplateID, c.Request.SignalLevel, c.Request.AsOf,
+			stmt, err := renderCase(rnd, c.Request.TemplateID, c.Request.SignalLevel, c.Request.Severity, c.Request.AsOf,
 				c.Request.Method, c.Request.RulesetVersion, c.Request.Slots)
 			if c.Expect.Error != "" {
 				var we *Error
@@ -92,11 +93,11 @@ func TestRenderVectors(t *testing.T) {
 	}
 }
 
-func renderCase(rnd *Renderer, id, level, asOf, method, ruleset string, slots map[string]struct {
+func renderCase(rnd *Renderer, id, level, severity, asOf, method, ruleset string, slots map[string]struct {
 	Type  SlotType `json:"type"`
 	Value string   `json:"value"`
 }) (Statement, error) {
-	req := Request{TemplateID: id, Level: signal.Public(level), Method: method, RulesetVersion: ruleset, Slots: map[string]Value{}}
+	req := Request{TemplateID: id, Level: signal.Public(level), Severity: Severity(severity), Method: method, RulesetVersion: ruleset, Slots: map[string]Value{}}
 	if asOf != "" {
 		t, err := time.Parse(time.RFC3339, asOf)
 		if err != nil {
