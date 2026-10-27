@@ -5,7 +5,7 @@
 [![CI](https://github.com/SoroSentinel/Sorosentinel-intel/actions/workflows/ci.yml/badge.svg)](https://github.com/SoroSentinel/Sorosentinel-intel/actions/workflows/ci.yml)
 ![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)
 ![Stellar](https://img.shields.io/badge/Stellar-Soroban-black)
-![License](https://img.shields.io/badge/license-TODO-lightgrey)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Intel is the evidence and reputation backbone of SoroSentinel. It reads Stellar ledger data, runs rule-based detectors (look-alike asset codes, home-domain mismatches, account-takeover patterns), stores the raw evidence behind every signal, and publishes the results as a REST API and an Ed25519-signed snapshot that wallets can check offline. It also owns the shared schemas and the approved wording that every public statement must come from.
 
@@ -77,4 +77,4 @@ Do not open public issues for vulnerabilities. See [SECURITY.md](SECURITY.md). T
 
 ## License
 
-TODO: choose a license (see the open question in the maintainer notes) and add a `LICENSE` file.
+Licensed under the [Apache License, Version 2.0](LICENSE).
