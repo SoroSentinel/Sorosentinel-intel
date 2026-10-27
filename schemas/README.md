@@ -14,6 +14,12 @@ Consumers pin a git tag of this repo and never hand-edit copies.
   internal `Verdict`/`Evidence` models are deliberately not shared schemas.
 - Amounts are integer stroops encoded as decimal strings (`common.json#/$defs/stroops`).
 
+## Changes
+
+| Date | Schema | Change |
+|---|---|---|
+| 2026-10-27 | `AnalysisResult` | `effects[].delta_max` may be `null`, meaning no upper bound. Approved by the owner; safe before the first tagged release because no consumer is pinned yet. |
+
 ## Contents
 
 | Path | What |

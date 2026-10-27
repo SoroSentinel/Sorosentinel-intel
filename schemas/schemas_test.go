@@ -45,6 +45,38 @@ func TestSchemasWellFormed(t *testing.T) {
 	}
 }
 
+// delta_max may be null (no upper bound); delta_min never may (ADR 0002 follow-up).
+func TestSchemasEffectBounds(t *testing.T) {
+	raw, err := FS.ReadFile("jsonschema/AnalysisResult.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Properties struct {
+			Effects struct {
+				Items struct {
+					Required   []string                   `json:"required"`
+					Properties map[string]json.RawMessage `json:"properties"`
+				} `json:"items"`
+			} `json:"effects"`
+		} `json:"properties"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	props := doc.Properties.Effects.Items.Properties
+	if !strings.Contains(string(props["delta_max"]), `"type": "null"`) {
+		t.Error("delta_max must allow null")
+	}
+	if strings.Contains(string(props["delta_min"]), "null") {
+		t.Error("delta_min must not allow null")
+	}
+	required := strings.Join(doc.Properties.Effects.Items.Required, ",")
+	if !strings.Contains(required, "delta_max") {
+		t.Error("delta_max must stay required (null, not absent, means unbounded)")
+	}
+}
+
 func TestSchemasOpenAPIWellFormed(t *testing.T) {
 	raw, err := FS.ReadFile("openapi/intel.v1.yaml")
 	if err != nil {
