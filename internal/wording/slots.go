@@ -1,6 +1,7 @@
 package wording
 
 import (
+	"regexp"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -20,15 +21,19 @@ const (
 	SlotWasmHash  SlotType = "wasm_hash"
 	SlotDomain    SlotType = "domain"
 	SlotLedger    SlotType = "ledger"
+	SlotSignerKey SlotType = "signer_key"
+	SlotWeight    SlotType = "weight"
 )
 
 func (t SlotType) valid() bool {
 	switch t {
-	case SlotTimestamp, SlotAccount, SlotAssetKey, SlotContract, SlotWasmHash, SlotDomain, SlotLedger:
+	case SlotTimestamp, SlotAccount, SlotAssetKey, SlotContract, SlotWasmHash, SlotDomain, SlotLedger, SlotSignerKey, SlotWeight:
 		return true
 	}
 	return false
 }
+
+var signerKeyRe = regexp.MustCompile(`^(?:[GTX][A-Z2-7]{55}|P[A-Z2-7]{60,200})$`)
 
 // displayTime is the human form of a timestamp in rendered text; facts keep RFC 3339.
 const displayTime = "2006-01-02 15:04 UTC"
@@ -64,6 +69,20 @@ func NewValue(typ SlotType, raw string) (Value, error) {
 			return Value{}, &Error{Code: ErrInvalidSlotValue, Detail: "timestamp must be RFC 3339"}
 		}
 		return Timestamp(t)
+	case SlotSignerKey:
+		// Shape only: G (ed25519), T (pre-auth tx), X (hash-x), P (signed payload).
+		// TODO(verify): strkey checksums need the Stellar SDK.
+		if !signerKeyRe.MatchString(raw) {
+			return Value{}, &Error{Code: ErrInvalidSlotValue, Detail: "not a signer strkey"}
+		}
+		return Value{typ: typ, display: raw, fact: raw}, nil
+	case SlotWeight:
+		n, err := strconv.ParseUint(raw, 10, 8)
+		if err != nil {
+			return Value{}, &Error{Code: ErrInvalidSlotValue, Detail: "weight must be an integer from 0 to 255"}
+		}
+		s := strconv.FormatUint(n, 10)
+		return Value{typ: typ, display: s, fact: s}, nil
 	case SlotLedger:
 		n, err := strconv.ParseUint(raw, 10, 32)
 		if err != nil || n == 0 {

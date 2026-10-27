@@ -110,6 +110,8 @@ func TestLintCatchesBadTemplates(t *testing.T) {
 		"unknown status":          func(t *Template) { t.Status = "approved" },
 		"unmatched":               func(t *Template) { t.Text = "Asset {asset" },
 		"signal_levels is empty":  func(t *Template) { t.SignalLevels = nil },
+		"not both":                func(t *Template) { t.Severities = []Severity{"high"} },
+		"unknown severity":        func(t *Template) { t.SignalLevels = nil; t.Severities = []Severity{"severe"} },
 		"unknown signal level":    func(t *Template) { t.SignalLevels = []signal.Public{"malicious"} },
 		"id must look like":       func(t *Template) { t.ID = "Bad ID" },
 	}

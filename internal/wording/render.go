@@ -57,8 +57,10 @@ func NewRenderer(reg *Registry, cfg Config) (*Renderer, error) {
 // Request carries everything a statement needs. AsOf is supplied by the
 // caller (never read from the wall clock here) so output is reproducible.
 type Request struct {
-	TemplateID     string
+	TemplateID string
+	// Level is used by entity-signal templates; Severity by finding templates.
 	Level          signal.Public
+	Severity       Severity
 	AsOf           time.Time
 	Method         string
 	RulesetVersion string
@@ -68,6 +70,7 @@ type Request struct {
 type Statement struct {
 	TemplateID     string
 	SignalLevel    signal.Public
+	Severity       Severity
 	Text           string
 	Attribution    string
 	Facts          map[string]string
@@ -103,8 +106,12 @@ func (r *Renderer) Render(req Request) (Statement, error) {
 	if p := r.reg.lintAttribution(a); len(p) > 0 {
 		return Statement{}, &Error{Code: ErrInvalidTemplate, Detail: strings.Join(p, "; ")}
 	}
-	if !slices.Contains(t.SignalLevels, req.Level) {
-		return Statement{}, &Error{Code: ErrLevelNotAllowed, Detail: string(req.Level)}
+	if len(t.SignalLevels) > 0 {
+		if !slices.Contains(t.SignalLevels, req.Level) {
+			return Statement{}, &Error{Code: ErrLevelNotAllowed, Detail: string(req.Level)}
+		}
+	} else if !slices.Contains(t.Severities, req.Severity) {
+		return Statement{}, &Error{Code: ErrLevelNotAllowed, Detail: string(req.Severity)}
 	}
 
 	asOf, err := Timestamp(req.AsOf)
@@ -160,6 +167,7 @@ func (r *Renderer) Render(req Request) (Statement, error) {
 	return Statement{
 		TemplateID:     t.ID,
 		SignalLevel:    req.Level,
+		Severity:       req.Severity,
 		Text:           text,
 		Attribution:    attr,
 		Facts:          Facts(req),

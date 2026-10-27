@@ -53,9 +53,54 @@
       "slots": { "asset": "asset_key" },
       "attribution": "test_attr_draft_v1",
       "status": "counsel_approved"
+    },
+    {
+      "id": "test.signer.v1",
+      "applies_to": { "finding": "G-TEST-SIGNER" },
+      "severities": ["critical", "high"],
+      "text": "TEST ONLY. Signer {signer} with weight {weight} on {account}.",
+      "slots": { "signer": "signer_key", "weight": "weight", "account": "account" },
+      "attribution": "test_attr_v1",
+      "status": "counsel_approved"
     }
   ],
   "cases": [
+    {
+      "name": "finding template renders with an allowed severity",
+      "request": {
+        "template_id": "test.signer.v1", "severity": "critical", "as_of": "2026-10-27T09:00:00Z", "method": "G-TEST-SIGNER", "ruleset_version": "2026.10.1",
+        "slots": { "signer": { "type": "signer_key", "value": "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "weight": { "type": "weight", "value": "255" }, "account": { "type": "account", "value": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" } }
+      },
+      "expect": {
+        "text": "TEST ONLY. Signer XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA with weight 255 on GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF.",
+        "attribution": "Method: G-TEST-SIGNER, ruleset 2026.10.1. Observed 2026-10-27 09:00 UTC. This is an indicator, not a determination of intent or wrongdoing. Methodology: https://sorosentinel.invalid/methodology. Request a review: https://sorosentinel.invalid/review.",
+        "facts": { "signer": "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "weight": "255", "account": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF", "as_of": "2026-10-27T09:00:00Z" }
+      }
+    },
+    {
+      "name": "finding template rejects a severity it does not list",
+      "request": {
+        "template_id": "test.signer.v1", "severity": "low", "as_of": "2026-10-27T09:00:00Z", "method": "G-TEST-SIGNER", "ruleset_version": "2026.10.1",
+        "slots": { "signer": { "type": "signer_key", "value": "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "weight": { "type": "weight", "value": "1" }, "account": { "type": "account", "value": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" } }
+      },
+      "expect": { "error": "level_not_allowed" }
+    },
+    {
+      "name": "weight above 255 is invalid",
+      "request": {
+        "template_id": "test.signer.v1", "severity": "high", "as_of": "2026-10-27T09:00:00Z", "method": "G-TEST-SIGNER", "ruleset_version": "2026.10.1",
+        "slots": { "signer": { "type": "signer_key", "value": "XAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "weight": { "type": "weight", "value": "256" }, "account": { "type": "account", "value": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" } }
+      },
+      "expect": { "error": "invalid_slot_value" }
+    },
+    {
+      "name": "a contract address is not a signer key",
+      "request": {
+        "template_id": "test.signer.v1", "severity": "high", "as_of": "2026-10-27T09:00:00Z", "method": "G-TEST-SIGNER", "ruleset_version": "2026.10.1",
+        "slots": { "signer": { "type": "signer_key", "value": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "weight": { "type": "weight", "value": "1" }, "account": { "type": "account", "value": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF" } }
+      },
+      "expect": { "error": "invalid_slot_value" }
+    },
     {
       "name": "renders asset statement",
       "request": {
