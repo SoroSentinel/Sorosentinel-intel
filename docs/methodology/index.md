@@ -37,15 +37,17 @@ involves a human review.
 Statements come only from fixed, reviewed templates filled with these facts.
 If a statement cannot be produced exactly, only the facts are shown.
 
-## What we check today
+## What we check
 
-| Check | Based on |
-|---|---|
-| Asset code look-alikes | An asset uses the same or a confusable code (for example `0`/`O`, `I`/`l`/`1`) as a known asset, from a different issuer. Codes legitimately used by several issuers are listed and not flagged. |
-| Home-domain consistency | Whether the issuer's `home_domain` publishes a `stellar.toml` that lists the asset, re-checked over time. |
-| Issuer and trustline flags | Clawback, revocable and authorization-required flags. Reported as information, not as a risk on their own. |
-| Account-control patterns | Observed sequences that remove an account's signer and add another, followed by funds leaving. |
-| Contract bytecode indicators | Capabilities present in deployed contract code, such as the ability to replace its own code. Reported as information; they do not raise a level on their own. |
+These are the v1 checks. Each is marked live here when it ships; until then it produces no signals.
+
+| Check | Based on | Status |
+|---|---|---|
+| Asset code look-alikes | An asset uses the same or a confusable code (for example `0`/`O`, `I`/`l`/`1`) as a known asset, from a different issuer. Codes legitimately used by several issuers are listed and not flagged. | Planned |
+| Home-domain consistency | Whether the issuer's `home_domain` publishes a `stellar.toml` that lists the asset, re-checked over time. | Planned |
+| Issuer and trustline flags | Clawback, revocable and authorization-required flags. Reported as information, not as a risk on their own. | Planned |
+| Account-control patterns | Observed sequences that remove an account's signer and add another, followed by funds leaving. | Planned |
+| Contract bytecode indicators | Capabilities present in deployed contract code, such as the ability to replace its own code. Reported as information; they do not raise a level on their own. | Planned |
 
 ## What a transaction check (Guard) reports
 
