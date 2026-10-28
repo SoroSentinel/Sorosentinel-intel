@@ -49,5 +49,9 @@ the test, so no history from before the test is needed.
 - **Checkpoint.** The `Checkpoint` interface has an in-memory implementation
   only. The Postgres-backed one comes with the storage work. The previous-hash
   chain is checked within a run, not across a restart.
+- **Update 2026-10-28:** `cmd/intel-worker` adds the Postgres checkpoint
+  (`store.Checkpoint`) and cross-process exclusion (`store.AcquireWriter`, a
+  Postgres advisory lock per network). The previous-hash chain is still
+  checked within a run only.
 - Revisit this ADR when a detector needs history older than RPC retention, or
   before mainnet ingestion is relied on for anything a user sees.

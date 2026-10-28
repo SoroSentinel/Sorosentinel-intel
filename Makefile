@@ -22,9 +22,10 @@ test:
 	$(GO) test ./...
 
 # Needs a disposable Postgres 16; see internal/store/store_test.go for a docker command.
+# Includes the pipeline end-to-end test (ingest -> detectors -> store -> signed snapshot).
 test-integration:
 	@if [ -z "$$INTEL_TEST_DATABASE_URL" ]; then echo "test-integration: set INTEL_TEST_DATABASE_URL"; exit 2; fi
-	$(GO) test -count=1 ./internal/store/...
+	$(GO) test -count=1 ./internal/store/... ./internal/pipeline/...
 
 # Applies migrations/ (forward-only) to INTEL_DATABASE_URL.
 migrate:
