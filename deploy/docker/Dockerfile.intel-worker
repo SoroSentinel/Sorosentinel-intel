@@ -1,0 +1,27 @@
+# intel-worker: RPC ingestion, detectors, storage and signed snapshot
+# publishing (cmd/intel-worker), plus the forward-only migrate tool
+# (internal/store/cmd/migrate; run with --entrypoint /app/migrate).
+# Static binaries on scratch, non-root.
+#
+# Build from the repo root: docker build -f deploy/docker/Dockerfile.intel-worker .
+# Base image pinned by digest (AGENTS.md §6); bump deliberately.
+FROM golang:1.27.2-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS build
+WORKDIR /src
+ENV CGO_ENABLED=0 GOFLAGS=-mod=readonly GOTOOLCHAIN=local
+# No `go mod download`: it fetches the whole module graph. go build fetches
+# only what these binaries import, each module checked against go.sum.
+COPY . .
+RUN go build -trimpath -ldflags="-s -w" -o /out/bin/intel-worker ./cmd/intel-worker \
+ && go build -trimpath -ldflags="-s -w" -o /out/bin/migrate ./internal/store/cmd/migrate
+# Owned by the runtime user so named volumes mounted here start writable.
+RUN mkdir -p /out/data/snapshots /out/data/keys && chown -R 65532:65532 /out/data
+
+FROM scratch
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=build /out/bin/ /app/
+COPY --from=build --chown=65532:65532 /out/data/ /data/
+# The worker loads config/reference-assets.<network>.json relative to /app.
+COPY --from=build /src/config/ /app/config/
+WORKDIR /app
+USER 65532:65532
+ENTRYPOINT ["/app/intel-worker"]

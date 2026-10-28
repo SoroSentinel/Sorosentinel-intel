@@ -1,0 +1,11 @@
+# Build context for deploy/docker/*: source only.
+.git
+.claude
+.github
+bin
+deploy
+docs
+**/*_test.go
+testdata
+*.pem
+.env*

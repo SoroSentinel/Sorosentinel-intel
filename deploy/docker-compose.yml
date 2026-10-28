@@ -1,0 +1,107 @@
+# Local Intel stack on TESTNET for development and the demo
+# (docs/runbooks/local-demo.md; `make demo` drives it end to end).
+#
+# Not a production deployment: no cloud provider is chosen yet, and the
+# snapshot signing key here is a THROWAWAY TEST KEY generated at startup into
+# the `keys` volume (production keys live in KMS). Postgres is reachable only
+# on the stack's internal network; only the read API is published, on
+# 127.0.0.1.
+#
+# Config comes only from environment variables; nothing secret is committed.
+#   INTEL_DB_PASSWORD        required; scripts/demo.sh generates a random one
+#   INTEL_START_LEDGER       required; a recent testnet ledger (first run only)
+#   INTEL_RPC_URL            default https://soroban-testnet.stellar.org
+#   INTEL_SNAPSHOT_INTERVAL  default 30s
+#   INTEL_SIGNING_KEY_ID     default demo-test-key
+#   INTEL_API_PORT           default 18080 (host side, 127.0.0.1 only)
+#   INTEL_METHODOLOGY_URL, INTEL_REVIEW_URL  https links used in statements
+#
+# The network is fixed to testnet. Run from the repo root:
+#   docker-compose -f deploy/docker-compose.yml up -d --build
+
+name: sorosentinel-demo
+
+x-db-url: &db-url
+  INTEL_DATABASE_URL: postgres://intel:${INTEL_DB_PASSWORD:?set INTEL_DB_PASSWORD}@postgres:5432/intel?sslmode=disable
+
+services:
+  postgres:
+    image: postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    environment:
+      POSTGRES_USER: intel
+      POSTGRES_DB: intel
+      POSTGRES_PASSWORD: ${INTEL_DB_PASSWORD:?set INTEL_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "intel", "-d", "intel"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  migrate:
+    image: sorosentinel-intel-worker:local
+    build: { context: .., dockerfile: deploy/docker/Dockerfile.intel-worker }
+    entrypoint: ["/app/migrate"]
+    environment: *db-url
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  # TEST ONLY: throwaway signing key; kept across restarts, removed with `down -v`.
+  keygen:
+    image: sorosentinel-demo-tools:local
+    build: { context: .., dockerfile: deploy/docker/Dockerfile.demo-tools }
+    entrypoint: ["/app/gen-test-key", "-dir", "/data/keys"]
+    volumes:
+      - keys:/data/keys
+    restart: "no"
+
+  intel-worker:
+    image: sorosentinel-intel-worker:local
+    command:
+      - -network=testnet
+      - -rpc-url=${INTEL_RPC_URL:-https://soroban-testnet.stellar.org}
+      - -start-ledger=${INTEL_START_LEDGER:?set INTEL_START_LEDGER to a recent testnet ledger}
+      - -snapshot-dir=/data/snapshots
+      - -signing-key-file=/data/keys/signing-key.pem
+      - -signing-key-id=${INTEL_SIGNING_KEY_ID:-demo-test-key}
+      - -snapshot-interval=${INTEL_SNAPSHOT_INTERVAL:-30s}
+    environment: *db-url
+    volumes:
+      - snapshots:/data/snapshots
+      - keys:/data/keys:ro
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      keygen: { condition: service_completed_successfully }
+    # An ingestion halt (e.g. unknown XDR) must stay visible, not loop.
+    restart: "no"
+
+  intel-api:
+    image: sorosentinel-intel-api:local
+    build: { context: .., dockerfile: deploy/docker/Dockerfile.intel-api }
+    command:
+      - -addr=0.0.0.0:8080
+      - -snapshot-dir=/data/snapshots
+      - -methodology-url=${INTEL_METHODOLOGY_URL:-https://github.com/SoroSentinel/Sorosentinel-intel/blob/main/docs/methodology/index.md}
+      - -review-url=${INTEL_REVIEW_URL:-https://github.com/SoroSentinel/Sorosentinel-intel/blob/main/docs/methodology/index.md#requesting-a-review}
+    environment: *db-url
+    volumes:
+      - snapshots:/data/snapshots:ro
+    ports:
+      - 127.0.0.1:${INTEL_API_PORT:-18080}:8080
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  # TEST ONLY: `docker-compose run --rm demo-tools` sets up a look-alike on testnet.
+  demo-tools:
+    image: sorosentinel-demo-tools:local
+    profiles: [tools]
+    environment: {}
+    entrypoint: ["/app/issue-lookalike", "-rpc-url=${INTEL_RPC_URL:-https://soroban-testnet.stellar.org}"]
+
+volumes:
+  pgdata:
+  snapshots:
+  keys:
