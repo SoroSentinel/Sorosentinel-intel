@@ -34,7 +34,7 @@ Data flows Scan → Intel → signed snapshot/API → Guard. The repos only talk
 
 ## Status
 
-Phase 0. In place: JSON Schema and OpenAPI contracts, canonical entity-key encoding with shared test vectors, the wording registry with a fail-closed renderer and blocklist lint, and the docs sync tooling. Not yet built: ingestion, detectors, verdicts, API server, snapshot publisher.
+Phase 1 complete in code; the Phase 1 exit test passed on testnet on 2026-10-28. In place: RPC-only ingestion with checkpoints and gap detection, the asset look-alike and home-domain detectors, Postgres evidence and verdict storage with a rule table, the SSRF-safe fetcher, `cmd/intel-worker` publishing an Ed25519-signed snapshot, the read API (`cmd/intel-api`), shared schemas and vectors (pre-release tag `v0.1.0-next.0`), and the fail-closed wording renderer. Not yet: counsel-approved wording (all templates are drafts), a KMS signer, deployment, and the Protocol 30 XDR upgrade.
 
 ## Quick start
 
