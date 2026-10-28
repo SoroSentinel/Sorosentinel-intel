@@ -3,7 +3,7 @@
 
 GO ?= go
 
-.PHONY: deps fmt lint test test-integration test-contract gen migrate docs-check verify
+.PHONY: deps fmt lint test test-integration test-contract gen migrate docs-check verify demo
 
 deps:
 	$(GO) mod download
@@ -46,3 +46,9 @@ docs-check:
 	scripts/sync-docs.sh --check
 
 verify: lint test test-contract docs-check
+
+# Local testnet demo: Intel stack in Docker (deploy/docker-compose.yml), a
+# look-alike asset, the read API and Guard's example. Testnet only; cleans up.
+# See docs/runbooks/local-demo.md. GUARD_REPO overrides the Guard checkout.
+demo:
+	scripts/demo.sh
