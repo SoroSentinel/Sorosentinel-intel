@@ -105,8 +105,9 @@ type Config struct {
 	MaxRetries int
 }
 
-// Ingester is the single writer for one network in this process.
-// TODO: cross-process exclusion (leader lock) comes with the Postgres checkpoint.
+// Ingester is the single writer for one network in this process. Cross-process
+// exclusion is the Postgres writer lease in internal/store (AcquireWriter),
+// taken by cmd/intel-worker before this is constructed.
 type Ingester struct {
 	cfg       Config
 	src       Source
