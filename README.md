@@ -62,27 +62,7 @@ make verify
 | `wording/` | Approved public text templates, attribution block, blocklist |
 | `internal/` | Entity keys, signal mapping, wording renderer (more to come) |
 | `cmd/wordlint/` | Template and blocklist lint, run in CI |
-| `cmd/intel-fuzz-seeds/` | Exports deployed contract WASM for Scan's fuzzer (see below) |
 | `docs/` | Canonical PRD, architecture, ADRs and agent instructions |
-
-## Contract WASM for Scan's fuzzer
-
-Scan cannot fetch (it depends on neither an HTTP client nor the Stellar XDR
-definitions); Intel already reads both. `cmd/intel-fuzz-seeds` pages ledger
-metadata over Stellar RPC, extracts each `ContractCode` entry's WASM, and writes
-`<sha256>.wasm` files for `make fuzz` in
-[Sorosentinel-scan](https://github.com/SoroSentinel/Sorosentinel-scan):
-
-```bash
-go run ./cmd/intel-fuzz-seeds -out ../Sorosentinel-scan/fuzz/seeds/scan -span 5000
-```
-
-It refuses any network whose passphrase it does not know, halts on a ledger gap
-or on XDR this build cannot decode exactly, caps output size and module count,
-and writes only public ledger data into a gitignored directory. Measured on SDF
-testnet on 2026-10-28: 73 distinct modules (1.1 MB) in 3000 ledgers, so use a
-wide `-span`. Nothing here is evidence or a verdict: the files are parser inputs
-and are re-checked against the hash in the ledger entry they came from.
 
 ## Contributing
 

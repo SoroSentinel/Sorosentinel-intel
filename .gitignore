@@ -1,5 +1,2 @@
 /schemas/generated/
 /bin/
-# Output of cmd/intel-fuzz-seeds: public contract WASM, fetched on demand and
-# never committed.
-/seeds/
