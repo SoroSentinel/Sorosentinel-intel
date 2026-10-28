@@ -8,7 +8,9 @@ SoroSentinel Intel is pre-release and **has not been audited**. Do not rely on i
 
 Please do not open a public issue, PR or discussion for a vulnerability.
 
-Report privately through GitHub: **Security** tab → **Report a vulnerability** (private vulnerability reporting), or email TODO-security-contact.
+Report privately through GitHub private vulnerability reporting:
+<https://github.com/SoroSentinel/Sorosentinel-intel/security/advisories/new>
+(or the repository's **Security** tab → **Report a vulnerability**). If you cannot use GitHub, email TODO-security-contact.
 
 Include:
 
@@ -16,7 +18,18 @@ Include:
 - Steps or an input that reproduces it (a minimal XDR, WASM or request)
 - The commit or version you tested
 
-We aim to acknowledge reports within TODO business days and to agree on a disclosure date with you. Please give us reasonable time to fix the issue before disclosing it.
+## Disclosure process
+
+We follow coordinated disclosure:
+
+1. **Acknowledge** your report within 5 business days.
+2. **Triage** within 10 business days: confirm the issue, assess severity, and tell you whether we accept it.
+3. **Fix** in a private fork or advisory branch. We aim to release a fix within 90 days of the report; we will keep you updated at least every 14 days and tell you if we need longer.
+4. **Disclose** by publishing a GitHub Security Advisory (with a CVE where applicable) once the fix is available, on a date agreed with you. We credit reporters who want to be credited.
+
+Please give us reasonable time to fix the issue before disclosing it. If 90 days pass without a fix or an agreed extension, you may disclose.
+
+Only the latest commit on `main` is supported; there are no maintained releases yet.
 
 ## Scope
 
