@@ -1,0 +1,277 @@
+{
+  "_comment": "Synthetic labeled corpus for D-ASSET-LOOKALIKE. All accounts are made-up placeholders, not real issuers. The real golden corpus lives in a separate private repo.",
+  "as_of": "2026-10-27T12:00:00Z",
+  "network": "testnet",
+  "reference": {
+    "USDC": [
+      "GREFUSDCISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ],
+    "EURC": [
+      "GREFEURCISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "GREFEURCISSUERTWOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ],
+    "BTC": [
+      "GREFBTCISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "GREFBTCISSUERTWOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ],
+    "AQUA": [
+      "GREFAQUAISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ],
+    "XLM": [],
+    "COIN": [
+      "GSECONDISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ]
+  },
+  "cases": [
+    {
+      "name": "known USDC",
+      "asset": "USDC:GREFUSDCISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "known EURC issuer one",
+      "asset": "EURC:GREFEURCISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "known EURC issuer two",
+      "asset": "EURC:GREFEURCISSUERTWOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "known BTC issuer two",
+      "asset": "BTC:GREFBTCISSUERTWOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "unrelated code",
+      "asset": "GOAT:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "unrelated short code",
+      "asset": "AB:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "affix too long",
+      "asset": "USDCABC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "related code from known issuer",
+      "asset": "USDCX:GREFUSDCISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "same code other issuer",
+      "asset": "USDC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "exact"
+        }
+      ]
+    },
+    {
+      "name": "multi-issuer code, unknown third issuer",
+      "asset": "EURC:GOTHERISSUERTWOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "EURC",
+          "match": "exact"
+        }
+      ]
+    },
+    {
+      "name": "lowercase code",
+      "asset": "usdc:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "digit 5 for S",
+      "asset": "U5DC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "digit 8 for B",
+      "asset": "8TC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "BTC",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "digit 0 is not confusable with A",
+      "asset": "AQU0:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "issued asset with a native-only code",
+      "asset": "XLM:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "XLM",
+          "match": "exact"
+        }
+      ]
+    },
+    {
+      "name": "issued xlm lowercase",
+      "asset": "xlm:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "XLM",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "digit 0 for O",
+      "asset": "C0IN:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "COIN",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "digit 1 for I",
+      "asset": "CO1N:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "COIN",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "lowercase l for I",
+      "asset": "COlN:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "COIN",
+          "match": "confusable"
+        }
+      ]
+    },
+    {
+      "name": "uppercase L is not I",
+      "asset": "COLN:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "clean"
+    },
+    {
+      "name": "suffix x",
+      "asset": "USDCx:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "affix"
+        }
+      ]
+    },
+    {
+      "name": "prefix x",
+      "asset": "xUSDC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "affix"
+        }
+      ]
+    },
+    {
+      "name": "suffix 1",
+      "asset": "USDC1:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "affix"
+        }
+      ]
+    },
+    {
+      "name": "prefix and suffix",
+      "asset": "yEURCz:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "EURC",
+          "match": "affix"
+        }
+      ]
+    },
+    {
+      "name": "substitution plus suffix",
+      "asset": "U5DCx:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "lookalike",
+      "expect": [
+        {
+          "reference_code": "USDC",
+          "match": "affix"
+        }
+      ]
+    },
+    {
+      "name": "native",
+      "asset": "native",
+      "label": "clean"
+    },
+    {
+      "name": "issuer in lowercase",
+      "asset": "USDC:grefusdcissueraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "label": "invalid"
+    },
+    {
+      "name": "non-ASCII code (Cyrillic S)",
+      "asset": "U\u0405DC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "invalid"
+    },
+    {
+      "name": "bidi override in code",
+      "asset": "US\u202eDC:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "invalid"
+    },
+    {
+      "name": "code too long",
+      "asset": "USDCUSDCUSDCX:GOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "invalid"
+    },
+    {
+      "name": "muxed issuer",
+      "asset": "USDC:MOTHERISSUERONEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "label": "invalid"
+    },
+    {
+      "name": "missing issuer",
+      "asset": "USDC",
+      "label": "invalid"
+    }
+  ]
+}
