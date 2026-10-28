@@ -2,7 +2,7 @@
 // HTTPS). The endpoint is trusted configuration, but every response is
 // treated as hostile input: size and time caps, no redirects, strict shape
 // checks. Methods and fields follow developers.stellar.org (checked
-// 2026-10-28): getNetwork, getHealth, getLedgers.
+// 2026-10-28): getNetwork, getHealth, getLedgers, getLedgerEntries.
 package rpc
 
 import (
@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest/xdrcompat"
 )
 
 // DefaultTestnetURL is SDF's public testnet RPC (developers.stellar.org,
@@ -266,4 +267,48 @@ func (c *Client) Ledgers(ctx context.Context, start, limit uint32) ([]ingest.Raw
 		out = append(out, ingest.RawLedger{Sequence: *l.Sequence, Hash: *l.Hash, Meta: meta})
 	}
 	return out, nil
+}
+
+// HomeDomain reads an account's current home_domain with getLedgerEntries
+// (developers.stellar.org, checked against go-stellar-sdk v0.7.3
+// protocols/rpc). found=false means the account does not exist. The domain
+// is untrusted and empty when unset.
+func (c *Client) HomeDomain(ctx context.Context, account string) (domain string, found bool, err error) {
+	key, err := xdrcompat.AccountKey(account)
+	if err != nil {
+		return "", false, err
+	}
+	var r struct {
+		Entries []struct {
+			Key *string `json:"key"`
+			XDR *string `json:"xdr"`
+		} `json:"entries"`
+		LatestLedger *uint32 `json:"latestLedger"`
+	}
+	p := struct {
+		Keys      []string `json:"keys"`
+		XDRFormat string   `json:"xdrFormat"`
+	}{Keys: []string{key}, XDRFormat: "base64"}
+	if err := c.call(ctx, "getLedgerEntries", p, &r); err != nil {
+		return "", false, err
+	}
+	if r.LatestLedger == nil {
+		return "", false, fmt.Errorf("%w: getLedgerEntries: missing latestLedger", ErrBadResponse)
+	}
+	switch len(r.Entries) {
+	case 0:
+		return "", false, nil
+	case 1:
+	default:
+		return "", false, fmt.Errorf("%w: getLedgerEntries: %d entries for one key", ErrBadResponse, len(r.Entries))
+	}
+	e := r.Entries[0]
+	if e.Key == nil || *e.Key != key || e.XDR == nil {
+		return "", false, fmt.Errorf("%w: getLedgerEntries: entry does not match the key", ErrBadResponse)
+	}
+	d, err := xdrcompat.AccountHomeDomain(account, *e.XDR)
+	if err != nil {
+		return "", false, err
+	}
+	return d, true, nil
 }

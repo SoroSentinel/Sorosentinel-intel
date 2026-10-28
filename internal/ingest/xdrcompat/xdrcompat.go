@@ -343,3 +343,46 @@ func address(id xdr.AccountId) (string, error) {
 	}
 	return a, nil
 }
+
+// AccountKey returns the base64 XDR LedgerKey of a G... account, for RPC
+// getLedgerEntries.
+func AccountKey(account string) (string, error) {
+	if _, err := entity.NormalizeKey(entity.Account, account); err != nil {
+		return "", fmt.Errorf("%w: account: %v", ErrInvalidData, err)
+	}
+	var id xdr.AccountId
+	if err := id.SetAddress(account); err != nil {
+		return "", fmt.Errorf("%w: account: %v", ErrInvalidData, err)
+	}
+	var key xdr.LedgerKey
+	if err := key.SetAccount(id); err != nil {
+		return "", fmt.Errorf("%w: account key: %v", ErrInvalidData, err)
+	}
+	return xdr.MarshalBase64(key)
+}
+
+// AccountHomeDomain decodes a base64 LedgerEntryData (getLedgerEntries
+// `xdr`), requires it to be the given account's entry and returns its
+// home_domain (empty when unset). The value is untrusted.
+func AccountHomeDomain(account, entryData string) (string, error) {
+	var d xdr.LedgerEntryData
+	if err := xdr.SafeUnmarshalBase64(entryData, &d); err != nil {
+		return "", fmt.Errorf("%w: %v", ErrUnknownXDR, err)
+	}
+	again, err := xdr.MarshalBase64(d)
+	if err != nil || again != entryData {
+		return "", fmt.Errorf("%w: re-encoding differs", ErrUnknownXDR)
+	}
+	if d.Type != xdr.LedgerEntryTypeAccount {
+		return "", fmt.Errorf("%w: entry is not an account", ErrInvalidData)
+	}
+	acct := d.MustAccount()
+	addr, err := address(acct.AccountId)
+	if err != nil {
+		return "", err
+	}
+	if addr != account {
+		return "", fmt.Errorf("%w: entry is for another account", ErrInvalidData)
+	}
+	return string(acct.HomeDomain), nil
+}

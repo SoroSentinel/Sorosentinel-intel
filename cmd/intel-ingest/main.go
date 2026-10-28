@@ -1,9 +1,10 @@
 // Command intel-ingest tails one network from Stellar RPC and extracts the
 // Phase 1 detector inputs (ADR 0004). Run exactly one per network.
 //
-// Until the Postgres checkpoint and the detector wiring land, the checkpoint
-// is in memory (pass -start-ledger on every start) and facts are only counted
-// in the log. It exits non-zero on any halting condition.
+// This is a facts-only debugging tool: the checkpoint is in memory (pass
+// -start-ledger on every start) and facts are only counted in the log. The
+// production path, with the Postgres checkpoint, detectors and snapshot
+// publishing, is cmd/intel-worker. It exits non-zero on any halting condition.
 package main
 
 import (
