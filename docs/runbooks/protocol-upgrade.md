@@ -57,6 +57,12 @@ release notes do not say so, check the `xdr` package for the new ledger and
 transaction-meta variants. Record what you found in the PR; if you cannot
 confirm it, leave a `TODO(verify)` and stop.
 
+Done in advance on 2026-10-28: `protocol-30-preflight-2026-10.md` §2 confirms
+v0.8.0 carries Protocol 30 XDR (CAP-0084/0087/0088, regenerated from
+stellar-xdr@4f524bba, ungated) and records which of its breaking changes actually
+reach Intel, including the one that decides §0's halt: the new `StellarValue`
+millisecond arms no earlier SDK can decode. Re-check it if the pin target changes.
+
 ## 3. Branch and bump the pin
 
 ```sh
@@ -90,6 +96,13 @@ the existing `default`, which halts", and never "ignore it".
 | `xdrcompat.changes` | `LedgerEntryChangeType` | A new change type is a new way state moved; skipping it loses facts silently. |
 | `xdrcompat.trustlineAsset` | `AssetType` | A new asset type has no code/issuer pair the detectors can key on. |
 | `xdrcompat.Decode` | protocol check, re-encode equality | Both must keep failing closed. |
+
+Measured import surface, so this list is not guessed: Intel imports only `xdr`
+(11 files), `strkey` (3), `network` (2) and `keypair` (1) from the module, none of
+`ingest`, `historyarchive`, `horizonclient`, `rpcclient` or `protocols`. So the bump
+also moves `strkey`, which v0.8.0 extends for CAP-0084 `W…` addresses — key
+encoding, which is the cross-repo contract in §7, not an ingestion detail. See
+`protocol-30-preflight-2026-10.md` §3.
 
 Two properties must survive the upgrade:
 
