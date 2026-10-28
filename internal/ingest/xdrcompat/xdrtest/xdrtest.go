@@ -68,6 +68,21 @@ func PoolShareTrustline(holder byte) xdr.LedgerEntry {
 	}}
 }
 
+// ContractModule is a ContractCode entry carrying code, hashed the way
+// stellar-core stores it.
+func ContractModule(code []byte) xdr.LedgerEntry {
+	return ContractModuleWith(sha256.Sum256(code), code)
+}
+
+// ContractModuleWith is a ContractCode entry with an explicit hash: pass a hash
+// that is not sha256(code) to exercise the mismatch path.
+func ContractModuleWith(hash xdr.Hash, code []byte) xdr.LedgerEntry {
+	return xdr.LedgerEntry{Data: xdr.LedgerEntryData{
+		Type:         xdr.LedgerEntryTypeContractCode,
+		ContractCode: &xdr.ContractCodeEntry{Hash: hash, Code: code},
+	}}
+}
+
 func Created(e xdr.LedgerEntry) xdr.LedgerEntryChange {
 	return xdr.LedgerEntryChange{Type: xdr.LedgerEntryChangeTypeLedgerEntryCreated, Created: &e}
 }

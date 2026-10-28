@@ -7,6 +7,7 @@ package xdrcompat
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 
@@ -71,18 +72,34 @@ type HomeDomain struct {
 // consumed and the re-encoding to match exactly, checks the protocol version
 // and extracts facts.
 func Decode(raw []byte) (Ledger, error) {
+	meta, l, err := decodeMeta(raw)
+	if err != nil {
+		return Ledger{}, err
+	}
+	x := newExtractor()
+	if err := x.ledger(meta); err != nil {
+		return Ledger{}, fmt.Errorf("ledger %d: %w", l.Sequence, err)
+	}
+	l.Facts = x.facts()
+	return l, nil
+}
+
+// decodeMeta applies the checks every caller of this package must pass before
+// trusting a decoded ledger: exact re-encoding (nothing dropped or normalized
+// away) and the protocol gate. It returns the meta and the ledger's identity.
+func decodeMeta(raw []byte) (xdr.LedgerCloseMeta, Ledger, error) {
 	var meta xdr.LedgerCloseMeta
 	if err := xdr.SafeUnmarshal(raw, &meta); err != nil {
-		return Ledger{}, fmt.Errorf("%w: %v", ErrUnknownXDR, err)
+		return meta, Ledger{}, fmt.Errorf("%w: %v", ErrUnknownXDR, err)
 	}
 	// A clean round trip shows nothing was dropped or normalized away.
 	again, err := meta.MarshalBinary()
 	if err != nil || !bytes.Equal(again, raw) {
-		return Ledger{}, fmt.Errorf("%w: re-encoding differs", ErrUnknownXDR)
+		return meta, Ledger{}, fmt.Errorf("%w: re-encoding differs", ErrUnknownXDR)
 	}
 	hdr, err := header(meta)
 	if err != nil {
-		return Ledger{}, err
+		return meta, Ledger{}, err
 	}
 	l := Ledger{
 		Sequence:     uint32(hdr.Header.LedgerSeq),
@@ -92,14 +109,86 @@ func Decode(raw []byte) (Ledger, error) {
 		CloseTime:    int64(hdr.Header.ScpValue.CloseTime),
 	}
 	if l.Protocol > MaxProtocol {
-		return Ledger{}, fmt.Errorf("%w: ledger %d is protocol %d, max %d", ErrUnsupportedProtocol, l.Sequence, l.Protocol, MaxProtocol)
+		return meta, Ledger{}, fmt.Errorf("%w: ledger %d is protocol %d, max %d", ErrUnsupportedProtocol, l.Sequence, l.Protocol, MaxProtocol)
 	}
-	x := newExtractor()
-	if err := x.ledger(meta); err != nil {
-		return Ledger{}, fmt.Errorf("ledger %d: %w", l.Sequence, err)
+	return meta, l, nil
+}
+
+// Module is one deployed contract's WASM as it was written to the ledger.
+type Module struct {
+	Hash   [32]byte // sha256 of Code, which is also the ContractCode ledger key
+	Code   []byte
+	Ledger uint32 // sequence of the ledger that wrote it
+}
+
+// Modules decodes one LedgerCloseMeta with the same strictness as Decode and
+// returns every contract WASM written to that ledger, deduplicated by hash and
+// in first-seen order. It exists for the fuzz-seed exporter (cmd/intel-fuzz-seeds):
+// the modules are public ledger data used as parser inputs, and nothing here
+// analyzes them.
+func Modules(raw []byte) ([]Module, error) {
+	meta, l, err := decodeMeta(raw)
+	if err != nil {
+		return nil, err
 	}
-	l.Facts = x.facts()
-	return l, nil
+	lists, err := changeLists(meta)
+	if err != nil {
+		return nil, err
+	}
+	var out []Module
+	seen := map[[32]byte]bool{}
+	for _, list := range lists {
+		for _, c := range list {
+			e, wrote, err := changedEntry(c)
+			if err != nil {
+				return nil, err
+			}
+			if !wrote || e.Data.Type != xdr.LedgerEntryTypeContractCode {
+				continue
+			}
+			cc := e.Data.MustContractCode()
+			if len(cc.Code) == 0 {
+				return nil, fmt.Errorf("%w: contract code entry without code", ErrInvalidData)
+			}
+			if got := sha256.Sum256(cc.Code); got != [32]byte(cc.Hash) {
+				return nil, fmt.Errorf("%w: contract code sha256 mismatch", ErrInvalidData)
+			}
+			h := [32]byte(cc.Hash)
+			if seen[h] {
+				continue
+			}
+			seen[h] = true
+			out = append(out, Module{Hash: h, Code: cc.Code, Ledger: l.Sequence})
+		}
+	}
+	return out, nil
+}
+
+// changedEntry reports the entry a change wrote. wrote=false is an entry the
+// ledger read or removed, not one it created; an unknown change type is an
+// error, never a skip.
+func changedEntry(c xdr.LedgerEntryChange) (entry xdr.LedgerEntry, wrote bool, err error) {
+	switch c.Type {
+	case xdr.LedgerEntryChangeTypeLedgerEntryCreated:
+		if c.Created == nil {
+			return entry, false, fmt.Errorf("%w: Created without an entry", ErrUnknownXDR)
+		}
+		return *c.Created, true, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryUpdated:
+		if c.Updated == nil {
+			return entry, false, fmt.Errorf("%w: Updated without an entry", ErrUnknownXDR)
+		}
+		return *c.Updated, true, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryRestored:
+		if c.Restored == nil {
+			return entry, false, fmt.Errorf("%w: Restored without an entry", ErrUnknownXDR)
+		}
+		return *c.Restored, true, nil
+	case xdr.LedgerEntryChangeTypeLedgerEntryState, xdr.LedgerEntryChangeTypeLedgerEntryRemoved:
+		return entry, false, nil
+	default:
+		return entry, false, fmt.Errorf("%w: LedgerEntryChangeType %d", ErrUnknownXDR, c.Type)
+	}
 }
 
 func header(meta xdr.LedgerCloseMeta) (xdr.LedgerHeaderHistoryEntry, error) {
@@ -138,6 +227,22 @@ func (x *extractor) facts() Facts {
 // changes cannot touch trustlines or home domains today, but walking them
 // keeps the walk exhaustive if that ever changes.
 func (x *extractor) ledger(meta xdr.LedgerCloseMeta) error {
+	lists, err := changeLists(meta)
+	if err != nil {
+		return err
+	}
+	for _, l := range lists {
+		if err := x.changes(l); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// changeLists returns every LedgerEntryChanges list in one meta, in the order
+// the ledger applied them: fee processing, transaction apply (each version's
+// own layout), post-transaction fee, then upgrades.
+func changeLists(meta xdr.LedgerCloseMeta) ([]xdr.LedgerEntryChanges, error) {
 	var lists []xdr.LedgerEntryChanges
 	var txMetas []xdr.TransactionMeta
 	var upgrades []xdr.UpgradeEntryMeta
@@ -164,24 +269,19 @@ func (x *extractor) ledger(meta xdr.LedgerCloseMeta) error {
 		}
 		upgrades = v.UpgradesProcessing
 	default:
-		return fmt.Errorf("%w: LedgerCloseMeta v%d", ErrUnknownXDR, meta.V)
+		return nil, fmt.Errorf("%w: LedgerCloseMeta v%d", ErrUnknownXDR, meta.V)
 	}
 	for _, tm := range txMetas {
 		l, err := txChanges(tm)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		lists = append(lists, l...)
 	}
 	for _, u := range upgrades {
 		lists = append(lists, u.Changes)
 	}
-	for _, l := range lists {
-		if err := x.changes(l); err != nil {
-			return err
-		}
-	}
-	return nil
+	return lists, nil
 }
 
 func txChanges(tm xdr.TransactionMeta) ([]xdr.LedgerEntryChanges, error) {
