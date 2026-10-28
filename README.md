@@ -79,10 +79,10 @@ go run ./cmd/intel-fuzz-seeds -out ../Sorosentinel-scan/fuzz/seeds/scan -span 50
 
 It refuses any network whose passphrase it does not know, halts on a ledger gap
 or on XDR this build cannot decode exactly, caps output size and module count,
-and writes only public ledger data into a gitignored directory. Measured on
-testnet on 2026-10-28: 6 new modules in 500 ledgers, so use a wide `-span`.
-Nothing here is evidence or a verdict: the files are parser inputs and are
-re-checked against the hash in the ledger entry they came from.
+and writes only public ledger data into a gitignored directory. Measured on SDF
+testnet on 2026-10-28: 73 distinct modules (1.1 MB) in 3000 ledgers, so use a
+wide `-span`. Nothing here is evidence or a verdict: the files are parser inputs
+and are re-checked against the hash in the ledger entry they came from.
 
 ## Contributing
 
