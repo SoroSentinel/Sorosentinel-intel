@@ -1,0 +1,59 @@
+[
+  {
+    "name": "lookalike alone",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2026-10-20T00:00:00Z",
+    "evidence": [
+      {"id": 11, "entity_id": 7, "source_kind": "heuristic", "detector": "D-ASSET-LOOKALIKE", "evidence_class": "onchain-pattern", "category": "impersonation_asset", "observed_at": "2026-10-19T08:00:00Z", "expires_at": "2026-11-19T08:00:00Z"}
+    ],
+    "want": {"level": "suspicious", "rule_id": "R-AUTOMATED", "category": "impersonation_asset", "evidence_ids": [11]}
+  },
+  {
+    "name": "lookalike expired, home-domain still active",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2026-12-01T00:00:00Z",
+    "evidence": [
+      {"id": 12, "entity_id": 7, "source_kind": "heuristic", "detector": "D-HOMEDOMAIN-MISMATCH", "evidence_class": "domain", "category": "home_domain_mismatch", "observed_at": "2026-10-21T00:00:00Z"},
+      {"id": 11, "entity_id": 7, "source_kind": "heuristic", "detector": "D-ASSET-LOOKALIKE", "evidence_class": "onchain-pattern", "category": "impersonation_asset", "observed_at": "2026-10-19T08:00:00Z", "expires_at": "2026-11-19T08:00:00Z"}
+    ],
+    "want": {"level": "suspicious", "rule_id": "R-AUTOMATED", "category": "home_domain_mismatch", "evidence_ids": [11, 12]}
+  },
+  {
+    "name": "everything expired",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2027-01-01T00:00:00Z",
+    "evidence": [
+      {"id": 11, "entity_id": 7, "source_kind": "heuristic", "detector": "D-ASSET-LOOKALIKE", "evidence_class": "onchain-pattern", "category": "impersonation_asset", "observed_at": "2026-10-19T08:00:00Z", "expires_at": "2026-11-19T08:00:00Z"}
+    ],
+    "want": {"level": "unknown", "rule_id": "R-NO-ACTIVE-EVIDENCE", "category": "", "evidence_ids": [11]}
+  },
+  {
+    "name": "human confirmed malicious",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2026-10-22T00:00:00Z",
+    "evidence": [
+      {"id": 11, "entity_id": 7, "source_kind": "heuristic", "detector": "D-ASSET-LOOKALIKE", "evidence_class": "onchain-pattern", "category": "impersonation_asset", "observed_at": "2026-10-19T08:00:00Z"},
+      {"id": 13, "entity_id": 7, "source_kind": "curated", "detector": "D-CURATED", "evidence_class": "human", "category": "impersonation_asset", "observed_at": "2026-10-21T10:00:00Z", "confirmed_level": "malicious", "confirmed_by": "analyst-1"}
+    ],
+    "want": {"level": "malicious", "rule_id": "R-HUMAN-CONFIRMED", "category": "impersonation_asset", "evidence_ids": [11, 13]}
+  },
+  {
+    "name": "human benign superseded by newer automated",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2026-10-25T00:00:00Z",
+    "evidence": [
+      {"id": 20, "entity_id": 9, "source_kind": "curated", "detector": "D-CURATED", "evidence_class": "human", "category": "impersonation_asset", "observed_at": "2026-10-20T00:00:00Z", "confirmed_level": "benign", "confirmed_by": "analyst-2"},
+      {"id": 21, "entity_id": 9, "source_kind": "heuristic", "detector": "D-HOMEDOMAIN-MISMATCH", "evidence_class": "domain", "category": "home_domain_mismatch", "observed_at": "2026-10-24T00:00:00Z"}
+    ],
+    "want": {"level": "suspicious", "rule_id": "R-HUMAN-SUPERSEDED", "category": "home_domain_mismatch", "evidence_ids": [20, 21]}
+  },
+  {
+    "name": "informational only",
+    "ruleset_version": "2026.10.1",
+    "as_of": "2026-10-25T00:00:00Z",
+    "evidence": [
+      {"id": 30, "entity_id": 10, "source_kind": "heuristic", "detector": "D-FLAGS-RISK", "evidence_class": "onchain-pattern", "category": "issuer_flags", "observed_at": "2026-10-24T00:00:00Z"}
+    ],
+    "want": {"level": "unknown", "rule_id": "R-INFORMATIONAL-ONLY", "category": "", "evidence_ids": [30]}
+  }
+]
