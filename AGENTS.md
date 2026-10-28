@@ -84,7 +84,7 @@ Applies to API responses, Guard UI text, CLI output meant for end users, lookup 
 ### `sorosentinel-intel` (Go)
 
 - **Owns:** `schemas/` (OpenAPI + JSON Schema, canonical key-encoding spec + test vectors), `wording/` (templates), `migrations/`, ingestion, detectors, verdict engine, API, snapshot publisher.
-- **Commands:** check everything `make verify` (gofmt check, `go vet`, wordlint, tests, shared vectors) · test `make test` · lint `make lint` · build `go build ./...` · generate schemas `make gen` (no generator chosen yet; a no-op) · migrate: none yet (no `migrations/`) · sync docs to Scan/Guard `scripts/sync-docs.sh`.
+- **Commands:** check everything `make verify` (gofmt check, `go vet`, wordlint, tests, shared vectors) · test `make test` · lint `make lint` · build `go build ./...` · generate schemas `make gen` (no generator chosen yet; a no-op) · migrate `make migrate` (applies `migrations/` to `INTEL_DATABASE_URL`; forward-only, refuses edited migrations) · store integration tests `make test-integration` (needs `INTEL_TEST_DATABASE_URL` pointing at a disposable Postgres 16; `make test` skips them without it) · sync docs to Scan/Guard `scripts/sync-docs.sh`.
 - **Rules:**
   - Schema changes are **additive within a major version**; breaking changes need a new `/v2` and a dual-run period. Regenerate packages; don't hand-edit generated code.
   - Ingestion is idempotent by `(network, ledger_seq)`, writes a checkpoint, and **halts with an alert on unknown XDR** (never skips or guesses). Detect and alert on non-contiguous ledger sequences.
