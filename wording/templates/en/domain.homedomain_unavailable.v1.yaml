@@ -1,0 +1,17 @@
+# DRAFT for counsel review. D-HOMEDOMAIN-MISMATCH, reasons fetch_failed and
+# unparsable: the issuer's stellar.toml could not be retrieved or read.
+id: domain.homedomain_unavailable.v1
+applies_to:
+  entity_type: asset
+  detector: D-HOMEDOMAIN-MISMATCH
+signal_levels: [caution]
+text: >-
+  Issuer account {issuer} sets its home domain to {home_domain}. When checked
+  on {as_of}, the stellar.toml file at that domain could not be retrieved or
+  read, so it was not possible to confirm that the file lists {asset}.
+slots:
+  issuer: account
+  home_domain: domain
+  asset: asset_key
+attribution: standard_v1
+status: draft

@@ -1,4 +1,5 @@
-# Wording from PRD §5.1 example rewrites. Draft until counsel approves it in a
+# DRAFT for counsel review. D-ASSET-LOOKALIKE when the code is identical
+# (match=exact). Wording from PRD §5.1 example rewrites. Draft until counsel approves it in a
 # separate PR; until then the renderer refuses it and APIs return facts only.
 id: asset.lookalike.v1
 applies_to:

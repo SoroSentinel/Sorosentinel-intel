@@ -1,0 +1,16 @@
+# DRAFT for counsel review. D-ASSET-LOOKALIKE when the code is not identical
+# but similar (letter/digit substitution, case, or a short prefix/suffix).
+# Wording from PRD §5.1 example rewrites; until approved the renderer refuses
+# it and APIs return facts only.
+id: asset.lookalike_similar.v1
+applies_to:
+  entity_type: asset
+  detector: D-ASSET-LOOKALIKE
+signal_levels: [caution, high_caution]
+text: >-
+  This asset's code is similar to the code of {known_asset}, and its issuer
+  account is different from the issuer of {known_asset}. Observed {as_of}.
+slots:
+  known_asset: asset_key
+attribution: standard_v1
+status: draft

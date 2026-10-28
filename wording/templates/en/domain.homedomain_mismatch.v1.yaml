@@ -1,0 +1,17 @@
+# DRAFT for counsel review. D-HOMEDOMAIN-MISMATCH, reason asset_not_listed:
+# the issuer's stellar.toml was read but does not list this asset.
+id: domain.homedomain_mismatch.v1
+applies_to:
+  entity_type: asset
+  detector: D-HOMEDOMAIN-MISMATCH
+signal_levels: [caution, high_caution]
+text: >-
+  Issuer account {issuer} sets its home domain to {home_domain}. The
+  stellar.toml file published at that domain does not list {asset} among its
+  currencies. Checked {as_of}.
+slots:
+  issuer: account
+  home_domain: domain
+  asset: asset_key
+attribution: standard_v1
+status: draft
