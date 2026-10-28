@@ -1,0 +1,43 @@
+# Synthetic stellar.toml modelled on the SEP-1 example. Placeholder accounts.
+VERSION="2.7.0"
+NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+SIGNING_KEY="GSECONDISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+ACCOUNTS=[
+"GHOMEDOMAINISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",   # issuer
+"GSECONDISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+]
+UPDATED = 2026-10-01 07:32:00Z
+MAX = +1_000.5e3
+
+[DOCUMENTATION]
+ORG_NAME="Example Issuer"
+ORG_URL='https://issuer.example'
+ORG_DESCRIPTION="""
+Multi-line description with "quotes" and a \
+line continuation."""
+
+[[PRINCIPALS]]
+name="Placeholder Person"
+email="ops@issuer.example"
+
+[[CURRENCIES]]
+code="EURT"
+issuer="GSECONDISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+display_decimals=2
+collateral_addresses=["2C1mCx3ukix1KfegAY5zgQJV7sanAciZpv"]
+[CURRENCIES.extra]
+note = 'sub-table of one entry'
+
+[[CURRENCIES]]
+code = "USDC"
+issuer = "GHOMEDOMAINISSUERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+display_decimals = 7
+is_unlimited = true
+desc = '''
+Literal ''multi-line'' text.'''
+[CURRENCIES.extra]
+note = { a = 1, b = [1, 2, { c = "d" }] }
+
+[[VALIDATORS]]
+ALIAS="node-1"
+HOST="core.issuer.example:11625"
