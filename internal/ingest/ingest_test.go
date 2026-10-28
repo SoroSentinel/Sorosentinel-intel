@@ -106,6 +106,15 @@ func (f *fakeRPC) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]any{"jsonrpc": "2.0", "id": req.ID, "result": result})
 }
 
+// setFailNext arms the next n requests with HTTP 500s. Assigning failNext
+// directly is a data race: a request the client already gave up on can still be
+// running in ServeHTTP after Run has returned.
+func (f *fakeRPC) setFailNext(n int) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.failNext = n
+}
+
 func (f *fakeRPC) client(t *testing.T) *rpc.Client {
 	t.Helper()
 	srv := httptest.NewTLSServer(f)
@@ -308,7 +317,7 @@ func TestHalts(t *testing.T) {
 func TestRunRetriesThenGivesUp(t *testing.T) {
 	f := newFake(xdrtest.Chain(100, 101, nil))
 	src := f.client(t)
-	f.failNext = 2 // two 500s, then healthy
+	f.setFailNext(2) // two 500s, then healthy
 	cp, sink := ingest.NewMemoryCheckpoint(), &recordSink{}
 	in := newIngester(t, src, cp, sink, 100)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -324,7 +333,7 @@ func TestRunRetriesThenGivesUp(t *testing.T) {
 	}
 	in.Close()
 
-	f.failNext = 1000
+	f.setFailNext(1000)
 	in2 := newIngester(t, src, ingest.NewMemoryCheckpoint(), sink, 100)
 	err := in2.Run(context.Background())
 	if err == nil || ingest.IsHalt(err) || !errors.Is(err, rpc.ErrBadResponse) {
