@@ -17,9 +17,10 @@ lint:
 	$(GO) vet ./...
 	$(GO) run ./cmd/wordlint -dir wording -docs docs/methodology
 
-# Store integration tests skip unless INTEL_TEST_DATABASE_URL is set (CI runs unit tests only).
+# Store integration tests skip unless INTEL_TEST_DATABASE_URL is set; CI's
+# integration job runs them against a Postgres 16 service (see ci.yml).
 test:
-	$(GO) test ./...
+	$(GO) test -race ./...
 
 # Needs a disposable Postgres 16; see internal/store/store_test.go for a docker command.
 # Includes the pipeline end-to-end test (ingest -> detectors -> store -> signed snapshot)

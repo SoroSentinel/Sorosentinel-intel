@@ -18,3 +18,41 @@ jobs:
           go-version-file: go.mod
       - run: make deps
       - run: make verify
+
+  # The chain that is the product: ingest -> detectors -> store -> signed
+  # snapshot -> read API. These suites skip without INTEL_TEST_DATABASE_URL, so
+  # without this job they only ever run on whoever's laptop has Postgres.
+  # Same Postgres image tag and digest as deploy/docker-compose.yml.
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+        env:
+          POSTGRES_USER: intel
+          POSTGRES_PASSWORD: intel-ci-only
+          POSTGRES_DB: intel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U intel -d intel"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      INTEL_DATABASE_URL: postgres://intel:intel-ci-only@127.0.0.1:5432/intel?sslmode=disable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make deps
+      # Migrations on their own database, as the deploy runs them. The
+      # integration tests each create and drop a separate throwaway database,
+      # so they never see these rows.
+      - name: make migrate
+        run: make migrate
+      - name: make test-integration
+        env:
+          INTEL_TEST_DATABASE_URL: postgres://intel:intel-ci-only@127.0.0.1:5432/intel?sslmode=disable
+        run: make test-integration
