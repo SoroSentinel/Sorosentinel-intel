@@ -1,0 +1,23 @@
+# Dependabot version updates. The cooldown keeps proposed versions at least
+# 14 days old, matching the project's dependency-age rule (AGENTS.md §6).
+# Cooldown does not apply to Dependabot security updates.
+
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: "ci(deps)"
