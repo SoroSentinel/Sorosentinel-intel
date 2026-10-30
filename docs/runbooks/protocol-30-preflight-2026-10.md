@@ -118,9 +118,16 @@ alongside a `W…` address are captured. That is runbook §5's job, after 2026-1
 - The `txnbuild` fix (`BuildXDR` reusing cleared `SetOptions` fields, `FromXDR` merging into the receiver)
   is a lesson for Guard's own decode path: `setOptions` is one of the seven operations Guard derives
   effects for, and a decoder that merges into a reused object instead of replacing it produces exactly the
-  kind of wrong-effect value that passes tests. Guard's `decode/operations.ts` is the analogous code and
-  has **not** been checked for that pattern — make it a review item in the #14 PR rather than assuming it
-  is clean.
+  kind of wrong-effect value that passes tests. **Checked 2026-10-30, and negative:** every Guard decoder
+  returns fresh object literals, every accumulator is call-local, `aggregate()` copies before mutating
+  (`effects/derive.ts`), no module-scope mutable state exists outside the wording registry's
+  `ReadonlySet`s, and a simulation is only attributed when the transaction holds exactly one invocation.
+  `SC_ADDRESS_TYPE_MUXED_ACCOUNT` carries its own `MuxedEd25519Account` struct, so `.muxedAccount.ed25519`
+  is the right field, not a missed union arm; CAP-0084's `muxedContract` sits behind
+  `#ifdef CAP_0084_MUXED_CONTRACT`, so when the pin moves, Guard's `assertNever` switches fail at compile.
+  The review is closed by `packages/core/test/purity.test.ts` in Guard rather than by this note, because
+  the existing suite would not have caught it: replacing `byKey.set(key, { ...d })` with
+  `byKey.set(key, d)` — an in-place write into caller-owned data — leaves 675 of 676 core tests green.
 
 ## 7. Gate status
 
