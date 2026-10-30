@@ -65,12 +65,16 @@ emit "$ROOT/AGENTS.md" "$TMP/AGENTS.intel.md"
 for pair in "guard:$GUARD_REPO" "scan:$SCAN_REPO"; do
   name=${pair%%:*}
   repo=${pair#*:}
-  if [ ! -d "$repo/.git" ]; then
+  # A worktree's .git is a file, not a directory; -d would skip it and --check
+  # would then report clean for a sibling nobody looked at.
+  if [ ! -e "$repo/.git" ]; then
     if [ "$MODE" = check ]; then
       echo "skip: $name repo not found at $repo" >&2
       continue
     fi
-    echo "error: $name repo not found at $repo (set ${name}_REPO)" >&2
+    # the override is GUARD_REPO / SCAN_REPO, not guard_REPO
+    var=$(printf '%s' "$name" | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')_REPO
+    echo "error: $name repo not found at $repo (set $var)" >&2
     exit 1
   fi
   agents_md "$name" "$TMP/AGENTS.$name.md"
