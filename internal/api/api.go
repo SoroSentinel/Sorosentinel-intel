@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/entity"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/monitoring"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/store"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/wording"
 )
@@ -232,7 +233,7 @@ func (s *Server) recoverer(next http.Handler) http.Handler {
 					panic(v)
 				}
 				// The panic value may hold request data; it is not logged.
-				s.cfg.Log.Error("handler panic", "alert", true)
+				s.cfg.Log.Error("handler panic", monitoring.AlertFields(monitoring.ApiPanic)...)
 				writeError(w, http.StatusInternalServerError, codeInternal)
 			}
 		}()

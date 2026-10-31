@@ -73,6 +73,12 @@ func (c *Checkpoint) Set(ctx context.Context, n entity.Network, seq uint32) erro
 	return nil
 }
 
+// ErrWriterLockLost means the connection holding this process's single-writer
+// advisory lock failed, so Postgres may have handed the lock to another writer.
+// It is a named condition rather than a message because the worker's alert
+// taxonomy keys on it (internal/monitoring, intel #54).
+var ErrWriterLockLost = errors.New("store: writer lock lost")
+
 // WriterLock is a session-level advisory lock that makes one process the only
 // writer for a network (ingest, pipeline and snapshot publishing). It holds a
 // dedicated connection until Release; if that connection drops, Postgres
@@ -149,7 +155,7 @@ func (l *WriterLock) Ping(ctx context.Context) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.done {
-		return errors.New("store: writer lock released")
+		return fmt.Errorf("%w: already released", ErrWriterLockLost)
 	}
 	var held bool
 	err := l.conn.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM pg_locks
@@ -159,7 +165,7 @@ func (l *WriterLock) Ping(ctx context.Context) error {
 		return err
 	}
 	if !held {
-		return errors.New("store: writer lock no longer held")
+		return ErrWriterLockLost
 	}
 	return nil
 }

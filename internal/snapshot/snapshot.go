@@ -29,6 +29,13 @@ var (
 	keyIDRe   = regexp.MustCompile(`^[a-z0-9-]{1,64}$`)
 	rulesetRe = regexp.MustCompile(`^[0-9]{4}\.[0-9]{2}\.[0-9]+$`)
 	entryRe   = regexp.MustCompile(`^[0-9a-f]{32}$`)
+
+	// ErrSigning marks a failed publish as a signing failure specifically, so
+	// the worker can alert on it without reading an error string. A signing
+	// failure means no snapshot exists at all, unlike a storage or disk
+	// failure, and it is the condition Guard's stale-data path is designed
+	// around (intel #54).
+	ErrSigning = errors.New("snapshot: signing failed")
 )
 
 // Snapshot mirrors Snapshot.json field for field.
@@ -126,7 +133,7 @@ func Build(in Input, signer Signer) (Snapshot, error) {
 	}
 	sig, err := signer.Sign(payload)
 	if err != nil {
-		return Snapshot{}, fmt.Errorf("snapshot: sign: %w", err)
+		return Snapshot{}, fmt.Errorf("%w: %w", ErrSigning, err)
 	}
 	s.Signature = base64.StdEncoding.EncodeToString(sig)
 	return s, nil

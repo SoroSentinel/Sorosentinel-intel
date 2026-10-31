@@ -23,6 +23,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/api"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/monitoring"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/store"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/wording"
 )
@@ -56,7 +57,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, cfg, log); err != nil {
-		log.Error("api stopped", "alert", true, "err", err)
+		// "alert" is the field the log-based alerting matches on; the id names the
+		// rule (internal/monitoring, intel #54).
+		log.Error("api stopped", append(monitoring.AlertFields(monitoring.ApiStopped), "err", err)...)
 		os.Exit(1)
 	}
 	log.Info("api stopped")

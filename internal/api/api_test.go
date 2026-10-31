@@ -504,6 +504,74 @@ func TestPanicIsInternalErrorAndNotLogged(t *testing.T) {
 	}
 }
 
+// TestLogsCarryNoRequestData covers intel #54's third acceptance criterion at the
+// API boundary: the log describes the route, never what the client asked about.
+// Every way a client can supply a string is loaded with something recognisable,
+// and the run is repeated against a failing store so the error line is checked
+// too, not only the access line. An address in a log is an address in a search
+// index, a ticket, or someone's terminal scrollback (AGENTS.md §6).
+func TestLogsCarryNoRequestData(t *testing.T) {
+	addr := gKey(7)
+	contract := cKey(8)
+	muxed := mKey(t, addr, 4242)
+	domain := "give-us-your-secret-keys.example"
+	asset := "USD1:" + addr
+	blob := base64.StdEncoding.EncodeToString([]byte("an-enum-encoding-of-a-transaction-envelope"))
+
+	cases := []struct {
+		method, target string
+		body           string
+	}{
+		{"GET", entityPath("account", addr, "public"), ""},
+		{"GET", entityPath("account", muxed, "public"), ""},
+		{"GET", entityPath("contract", contract, "public"), ""},
+		{"GET", entityPath("asset", asset, "public"), ""},
+		{"GET", "/v1/entities/account/" + addr + "?network=" + domain, ""},
+		{"GET", "/v1/snapshots/latest?network=public&cursor=" + blob, ""},
+		{"GET", "/v1/snapshots/4294967296?network=public&cursor=" + blob, ""},
+		{"GET", "/v1/entities/account/..%2F..%2Fetc%2Fpasswd?network=public", ""},
+		{"GET", "/v1/entities/account/" + strings.Repeat("A", 4096) + "?network=public", ""},
+		{"POST", "/v1/entities:batchGet", `{"keys":[{"network":"public","type":"account","key":"` + addr + `"}]}`},
+		{"POST", "/v1/entities:batchGet", blob},
+	}
+	for _, failing := range []bool{false, true} {
+		var logs bytes.Buffer
+		reg, _ := wording.LoadEmbedded()
+		rnd, _ := wording.NewRenderer(reg, testRenderConfig)
+		st := &fakeStore{results: map[string]store.LookupResult{}, snapshots: map[string]store.SnapshotRecord{}}
+		if failing {
+			st.err = errors.New("store: connection reset by peer")
+		}
+		s, err := New(Config{Store: st, Renderer: rnd, SnapshotDir: t.TempDir(), Log: slogTo(&logs)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		h := s.Handler()
+		for _, c := range cases {
+			rec := do(t, h, c.method, c.target, "application/json", []byte(c.body))
+			if rec.Code >= 500 && !failing {
+				t.Errorf("%s %s: status %d with a working store", c.method, c.target, rec.Code)
+			}
+		}
+		text := logs.String()
+		for _, hostile := range []string{addr, muxed, contract, asset, domain, blob} {
+			if strings.Contains(text, hostile) {
+				t.Errorf("store failing=%v: a log line contains request data %q\n%s", failing, hostile, text)
+			}
+		}
+		// Positive controls, so the absence above is about the code and not about
+		// a run that logged nothing at all.
+		for _, want := range []string{`"route":"/v1/entities/{type}/{id}"`, `"route":"/v1/snapshots/{version}"`, `"route":"/v1/entities:batchGet"`} {
+			if !strings.Contains(text, want) {
+				t.Errorf("store failing=%v: no access line for %s\n%s", failing, want, text)
+			}
+		}
+		if failing && !strings.Contains(text, "store read failed") {
+			t.Errorf("a store failure logged no error line: %s", text)
+		}
+	}
+}
+
 type panicStore struct{ *fakeStore }
 
 func (panicStore) LookupEntities(context.Context, []store.LookupKey) ([]store.LookupResult, error) {

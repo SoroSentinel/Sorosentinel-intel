@@ -37,17 +37,67 @@ var (
 	ErrWriterActive = errors.New("ingest: a writer is already active for this network")
 	// ErrNoStart: no checkpoint and no configured start ledger.
 	ErrNoStart = errors.New("ingest: no checkpoint and no start ledger")
+	// ErrRetriesExhausted: retryable errors in a row reached MaxRetries, so Run
+	// gave up. Nothing is being recorded even though no single cause was a halt.
+	ErrRetriesExhausted = errors.New("ingest: retryable errors exhausted")
 )
 
-// IsHalt reports whether err must stop ingestion rather than be retried.
+// IsHalt reports whether err must stop ingestion rather than be retried. Running
+// out of retries counts: from that point nothing is being recorded, whether or
+// not any single error was a halt cause, so the caller treats it like one.
 func IsHalt(err error) bool {
-	for _, h := range []error{ErrGap, ErrInconsistent, ErrWrongNetwork, ErrWriterActive, ErrNoStart,
+	for _, h := range []error{ErrGap, ErrInconsistent, ErrWrongNetwork, ErrWriterActive, ErrNoStart, ErrRetriesExhausted,
 		xdrcompat.ErrUnknownXDR, xdrcompat.ErrUnsupportedProtocol, xdrcompat.ErrInvalidData} {
 		if errors.Is(err, h) {
 			return true
 		}
 	}
 	return false
+}
+
+// Halt kinds are the stable names the operator-facing alerts group by. They are
+// part of the monitoring contract (internal/monitoring) and are logged, never
+// parsed back out of an error string, so a rule can narrow a halt to one cause
+// without depending on wording.
+const (
+	HaltGap                 = "gap"
+	HaltInconsistent        = "inconsistent"
+	HaltWrongNetwork        = "wrong_network"
+	HaltWriterActive        = "writer_active"
+	HaltNoStart             = "no_start"
+	HaltUnknownXDR          = "unknown_xdr"
+	HaltUnsupportedProtocol = "unsupported_protocol"
+	HaltInvalidData         = "invalid_data"
+	HaltRetriesExhausted    = "retries_exhausted"
+)
+
+// HaltKind names why ingestion stopped, or "" when err is not a halt cause. A
+// give-up after consecutive retryable errors is a halt of its own kind: the
+// source kept answering, but never with something usable.
+func HaltKind(err error) string {
+	switch {
+	case err == nil:
+		return ""
+	case errors.Is(err, ErrGap):
+		return HaltGap
+	case errors.Is(err, ErrInconsistent):
+		return HaltInconsistent
+	case errors.Is(err, ErrWrongNetwork):
+		return HaltWrongNetwork
+	case errors.Is(err, ErrWriterActive):
+		return HaltWriterActive
+	case errors.Is(err, ErrNoStart):
+		return HaltNoStart
+	case errors.Is(err, xdrcompat.ErrUnknownXDR):
+		return HaltUnknownXDR
+	case errors.Is(err, xdrcompat.ErrUnsupportedProtocol):
+		return HaltUnsupportedProtocol
+	case errors.Is(err, xdrcompat.ErrInvalidData):
+		return HaltInvalidData
+	case errors.Is(err, ErrRetriesExhausted):
+		return HaltRetriesExhausted
+	}
+	return ""
 }
 
 // RawLedger is one ledger as served by a Source.
@@ -186,7 +236,7 @@ func (in *Ingester) Run(ctx context.Context) error {
 		default:
 			failures++
 			if failures >= in.cfg.MaxRetries {
-				return fmt.Errorf("ingest: giving up after %d consecutive errors: %w", failures, err)
+				return fmt.Errorf("%w after %d consecutive errors: %w", ErrRetriesExhausted, failures, err)
 			}
 		}
 		if err == nil && n > 0 {

@@ -1,0 +1,468 @@
+[
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_ingest_halt\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "INGEST_HALT"
+      }
+    ],
+    "displayName": "intel: Intel ingestion halted",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "INGEST_HALT",
+      "component": "intel-worker",
+      "first_action": "Read halt_kind, then that runbook section. Do not restart to make the alert quiet.",
+      "runbook": "docs/runbooks/oncall-alerts.md#ingest-halt",
+      "severity": "page",
+      "summary": "intel-worker exited because a ledger could not be ingested correctly. Nothing new is being recorded."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_ledger_gap\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "LEDGER_GAP"
+      }
+    ],
+    "displayName": "intel: Intel ingestion hit a ledger gap",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "LEDGER_GAP",
+      "component": "intel-worker",
+      "first_action": "Treat it as a data-completeness incident: those ledgers need a backfill before ingestion resumes.",
+      "runbook": "docs/runbooks/oncall-alerts.md#ledger-gap",
+      "severity": "page",
+      "summary": "A halt whose cause is a missing ledger: the checkpoint's next sequence is not what the source serves."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_xdr_unsupported\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "XDR_UNSUPPORTED"
+      }
+    ],
+    "displayName": "intel: Intel cannot decode this ledger stream",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "XDR_UNSUPPORTED",
+      "component": "intel-worker",
+      "first_action": "Compare the protocol version with the pinned XDR library and follow docs/runbooks/protocol-upgrade.md.",
+      "runbook": "docs/runbooks/oncall-alerts.md#xdr-unsupported",
+      "severity": "page",
+      "summary": "A halt whose cause is XDR: an unknown structure, a protocol newer than this build's pin, or a value that breaks a ledger rule."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_writer_lock_lost\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "WRITER_LOCK_LOST"
+      }
+    ],
+    "displayName": "intel: Intel lost its single-writer lock",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "WRITER_LOCK_LOST",
+      "component": "intel-worker",
+      "first_action": "Confirm one worker per network before restarting anything.",
+      "runbook": "docs/runbooks/oncall-alerts.md#writer-lock-lost",
+      "severity": "page",
+      "summary": "The Postgres advisory lock that makes one process the writer for a network went away, so a second writer could start."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_snapshot_sign_failed\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "SNAPSHOT_SIGN_FAILED"
+      }
+    ],
+    "displayName": "intel: Intel could not sign a snapshot",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "SNAPSHOT_SIGN_FAILED",
+      "component": "intel-worker",
+      "first_action": "Check the key id and the signer's availability; a rotated key or a permission change is the usual cause.",
+      "runbook": "docs/runbooks/oncall-alerts.md#snapshot-sign-failed",
+      "severity": "page",
+      "summary": "The signing call failed, so no new snapshot exists. Guard keeps using the last one until it goes stale."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_snapshot_rejected\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "SNAPSHOT_FILE_REJECTED"
+      }
+    ],
+    "displayName": "intel: Intel refused to serve a snapshot",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "SNAPSHOT_FILE_REJECTED",
+      "component": "intel-api",
+      "first_action": "Compare the file with the snapshot row. Do not delete the row to make the request succeed.",
+      "runbook": "docs/runbooks/oncall-alerts.md#snapshot-file-rejected",
+      "severity": "page",
+      "summary": "A recorded snapshot's file is missing or disagrees with its row, so the API answered 503 instead of serving unverified bytes."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_api_panic\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "API_PANIC"
+      }
+    ],
+    "displayName": "intel: An Intel API handler panicked",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "API_PANIC",
+      "component": "intel-api",
+      "first_action": "Find the request id in the neighbouring request log, then reproduce it against the same snapshot version.",
+      "runbook": "docs/runbooks/oncall-alerts.md#api-panic",
+      "severity": "page",
+      "summary": "A handler crashed mid-request; the client got a 500 and the panic value was not logged."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_api_stopped\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "API_STOPPED"
+      }
+    ],
+    "displayName": "intel: The Intel API stopped",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "API_STOPPED",
+      "component": "intel-api",
+      "first_action": "Check the database connection and the snapshot directory before starting it again.",
+      "runbook": "docs/runbooks/oncall-alerts.md#api-stopped",
+      "severity": "page",
+      "summary": "intel-api exited non-zero, so the read API is down."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionAbsent": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "600s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "duration": "600s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_snapshot_published\"",
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "SNAPSHOT_STALE"
+      }
+    ],
+    "displayName": "intel: The published snapshot is going stale",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "SNAPSHOT_STALE",
+      "component": "intel-worker",
+      "first_action": "Confirm the worker is running and its publish loop is not logging failures.",
+      "runbook": "docs/runbooks/oncall-alerts.md#snapshot-stale",
+      "severity": "page",
+      "summary": "No snapshot has been published in twice the publish interval, so Guard clients are approaching their max-age refusal."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionAbsent": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "900s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "duration": "900s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_ledger_processed\"",
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "INGEST_LAG"
+      }
+    ],
+    "displayName": "intel: Ingestion has made no progress",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "INGEST_LAG",
+      "component": "intel-worker",
+      "first_action": "Check the RPC endpoint and the source ledger range before restarting the worker.",
+      "runbook": "docs/runbooks/oncall-alerts.md#ingest-lag",
+      "severity": "page",
+      "summary": "No ledger was processed for fifteen minutes without a halt being reported: the worker is stuck, not stopped."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_unclassified_alert\"",
+          "thresholdValue": 0,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "UNCLASSIFIED_ALERT"
+      }
+    ],
+    "displayName": "intel: An Intel alert has no rule",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "UNCLASSIFIED_ALERT",
+      "component": "intel",
+      "first_action": "Read the line, then add its id to internal/monitoring/alerts.go and regenerate; do not close this until it has a rule of its own.",
+      "runbook": "docs/runbooks/oncall-alerts.md#unclassified-alert",
+      "severity": "ticket",
+      "summary": "A log line asked for an operator but named an alert id the taxonomy does not list, so nothing else would have fired."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "600s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_snapshot_publish_failed\"",
+          "thresholdValue": 1,
+          "trigger": {
+            "count": 1
+          }
+        },
+        "displayName": "SNAPSHOT_PUBLISH_FAILED"
+      }
+    ],
+    "displayName": "intel: An Intel snapshot publish failed",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "SNAPSHOT_PUBLISH_FAILED",
+      "component": "intel-worker",
+      "first_action": "No action for a single hit; check the disk and the database if it repeats.",
+      "runbook": "docs/runbooks/oncall-alerts.md#snapshot-publish-failed",
+      "severity": "ticket",
+      "summary": "One publish attempt failed and the loop retries at the next tick. One is noise; a run of them is the stale-snapshot alert."
+    }
+  },
+  {
+    "combiner": "OR",
+    "conditions": [
+      {
+        "conditionThreshold": {
+          "aggregations": [
+            {
+              "alignmentPeriod": "300s",
+              "crossSeriesReducer": "REDUCE_SUM",
+              "perSeriesAligner": "ALIGN_SUM"
+            }
+          ],
+          "comparison": "COMPARISON_GT",
+          "denominatorFilter": "metric.\"logging.googleapis.com/user/intel_api_requests\"",
+          "duration": "0s",
+          "filter": "metric.\"logging.googleapis.com/user/intel_api_5xx\"",
+          "thresholdValue": 0.01,
+          "trigger": {
+            "count": 2
+          }
+        },
+        "displayName": "API_ERROR_RATE"
+      }
+    ],
+    "displayName": "intel: The Intel API is returning too many errors",
+    "notificationChannels": [
+      "projects/PROJECT_ID/notificationChannels/CHANNEL_ID"
+    ],
+    "userLabels": {
+      "alert_id": "API_ERROR_RATE",
+      "component": "intel-api",
+      "first_action": "Check database latency first: a store timeout is a 503 and looks like an error spike.",
+      "min_requests": "100",
+      "runbook": "docs/runbooks/oncall-alerts.md#api-error-rate",
+      "severity": "ticket",
+      "summary": "More than one percent of read-API requests answered 5xx over five minutes."
+    }
+  }
+]

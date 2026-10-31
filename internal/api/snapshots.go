@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/entity"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/monitoring"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/pipeline"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/snapshot"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/store"
@@ -113,7 +114,8 @@ func (s *Server) serveSnapshot(w http.ResponseWriter, r *http.Request, version u
 	if err != nil {
 		// A recorded snapshot whose file is missing or disagrees is an operator
 		// problem; the client gets no partial or unchecked file.
-		s.cfg.Log.Error("snapshot file rejected", "alert", true, "network", string(n), "version", rec.Version, "err", err)
+		s.cfg.Log.Error("snapshot file rejected", append(monitoring.AlertFields(monitoring.SnapshotRejected),
+			"network", string(n), "version", rec.Version, "err", err)...)
 		writeError(w, http.StatusServiceUnavailable, codeUnavailable)
 		return
 	}

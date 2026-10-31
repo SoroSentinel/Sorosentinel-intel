@@ -34,6 +34,7 @@ import (
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/fetcher"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest/source/rpc"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/monitoring"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/pipeline"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/snapshot"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/store"
@@ -92,11 +93,26 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, cfg, log); err != nil {
-		// "alert" is the field the log-based alerting matches on.
-		log.Error("worker stopped", "halt", ingest.IsHalt(err), "alert", true, "err", err)
+		// "alert" is the field the log-based alerting matches on; alert_id and
+		// halt_kind say which rule it is (internal/monitoring, intel #54).
+		log.Error("worker stopped", append(haltFields(err), "halt", ingest.IsHalt(err), "err", err)...)
 		os.Exit(1)
 	}
 	log.Info("worker stopped")
+}
+
+// haltFields names the alert a fatal worker error belongs to: the lock loss is
+// its own condition because the remedy is different (a second writer may already
+// be running), and every other exit is an ingestion halt with a cause. A loss
+// reports no halt_kind, since it is not a cause the ingester recognised.
+func haltFields(err error) []any {
+	if errors.Is(err, store.ErrWriterLockLost) {
+		return monitoring.AlertFields(monitoring.WriterLockLost)
+	}
+	if kind := ingest.HaltKind(err); kind != "" {
+		return append(monitoring.AlertFields(monitoring.IngestHalt), "halt_kind", kind)
+	}
+	return append(monitoring.AlertFields(monitoring.IngestHalt), "halt_kind", "unclassified")
 }
 
 func (c config) check() error {
@@ -193,7 +209,7 @@ func run(ctx context.Context, cfg config, log *slog.Logger) error {
 	select {
 	case <-ctx.Done():
 	case <-lock.Lost():
-		first = errors.New("worker: writer lock lost")
+		first = fmt.Errorf("%w: connection to Postgres dropped", store.ErrWriterLockLost)
 	case first = <-errs:
 	}
 	cancel()
@@ -223,7 +239,14 @@ func publishLoop(ctx context.Context, pub *pipeline.Publisher, every time.Durati
 		case ctx.Err() != nil:
 			return ctx.Err()
 		case err != nil:
-			log.Error("snapshot publish failed", "alert", true, "err", err)
+			// A signing failure means no snapshot exists at all, so it is its own
+			// alert rather than a retry: the guard-rail Guard clients depend on is
+			// the one that just stopped moving.
+			fields := monitoring.AlertFields(monitoring.SnapshotFailed)
+			if errors.Is(err, snapshot.ErrSigning) {
+				fields = monitoring.AlertFields(monitoring.SnapshotSignFailed)
+			}
+			log.Error("snapshot publish failed", append(fields, "err", err)...)
 		default:
 			log.Info("snapshot published", "correlation_id", fmt.Sprintf("%s-snapshot-%d", s.Network, s.Version),
 				"version", s.Version, "entries", len(s.Entries), "key_id", s.KeyID)

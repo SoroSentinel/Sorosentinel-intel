@@ -19,6 +19,7 @@ import (
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/entity"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest"
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/ingest/source/rpc"
+	"github.com/SoroSentinel/Sorosentinel-intel/internal/monitoring"
 )
 
 func main() {
@@ -59,9 +60,20 @@ func main() {
 	if ctx.Err() != nil {
 		return
 	}
-	// "alert" is the field the log-based alerting matches on.
-	log.Error("ingest halted", "network", *network, "halt", ingest.IsHalt(err), "alert", true, "err", err)
+	// "alert" is the field the log-based alerting matches on; alert_id and
+	// halt_kind say which rule it is (internal/monitoring, intel #54). The
+	// production worker logs the same id, so one rule covers both commands.
+	log.Error("ingest halted", append(monitoring.AlertFields(monitoring.IngestHalt),
+		"network", *network, "halt", ingest.IsHalt(err), "halt_kind", haltKind(err), "err", err)...)
 	os.Exit(1)
+}
+
+// haltKind names the stop condition, falling back to a label that still alerts.
+func haltKind(err error) string {
+	if k := ingest.HaltKind(err); k != "" {
+		return k
+	}
+	return "unclassified"
 }
 
 // logSink logs counts only: no addresses or untrusted strings in logs.
