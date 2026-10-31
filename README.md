@@ -12,6 +12,14 @@ Intel is the evidence and reputation backbone of SoroSentinel. It reads Stellar 
 
 Part of **SoroSentinel**, security tooling for the Stellar ecosystem. It advises; it never controls the network and never touches private keys.
 
+## Watch it work
+
+[![A 23-second film: the word "verdict" struck through, then one testnet ledger's evidence chain assembling row by row, then the four internal levels Intel never publishes](media/sorosentinel-intel.jpg)](media/sorosentinel-intel.mp4)
+
+No real account, asset or transaction hash appears in it: the issuer is shown truncated and the ledger number is a public testnet sequence. The panel is the Phase 1 exit test as recorded in `docs/runbooks/phase1-exit-test-results-2026-10.md` — one look-alike asset, two stored evidence rows, an automated-cap rule, a snapshot signed with Ed25519, and the public signal a wallet can verify for itself. `snapshot: bad signature` is what a copy with one entry changed fails with; Guard then reports `partial`, never a clean result. The four words struck through near the end are the internal levels that never leave Intel — what it publishes is `consistent`, `no_signals`, `caution` or `high_caution`.
+
+Music: ["Business Moves Vol. 12"](https://www.ende.app) by Sascha Ende, used under CC BY 4.0.
+
 ## Maintainers | [Telegram](TODO-telegram-group-link)
 
 | Maintainer | GitHub | Contact |
