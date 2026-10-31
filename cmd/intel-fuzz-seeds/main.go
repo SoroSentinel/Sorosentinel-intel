@@ -279,9 +279,11 @@ func main() {
 	defer stop()
 	s, err := run(ctx, src, o, log)
 	if err != nil {
-		// "alert" is the field the log-based alerting matches on.
+		// This is a one-shot dev tool: whoever runs it reads this stderr line
+		// directly, so it carries no `alert`/`alert_id` fields. Those are the
+		// monitored services' contract (internal/monitoring, intel #54).
 		log.Error("intel-fuzz-seeds: stopped", "ledgers", s.LedgersRead, "written", s.Written,
-			"alert", errors.Is(err, errUnknownNetwork), "err", err)
+			"unknown_network", errors.Is(err, errUnknownNetwork), "err", err)
 		os.Exit(1)
 	}
 	if s.Written == 0 {

@@ -3,7 +3,7 @@
 
 GO ?= go
 
-.PHONY: deps fmt lint test test-integration test-contract gen migrate docs-check verify demo
+.PHONY: deps fmt lint test test-integration test-contract gen gen-alerts migrate docs-check verify demo
 
 deps:
 	$(GO) mod download
@@ -41,6 +41,12 @@ test-contract:
 # schemas are validated as well-formed by `make test` and nothing is generated.
 gen:
 	@echo "gen: no code generator chosen yet; schemas/generated/ stays empty"
+
+# Rewrites deploy/monitoring/ from the alert table in internal/monitoring/alerts.go.
+# `make test` fails when the committed files disagree with the table, so run this
+# after changing the table and commit both together.
+gen-alerts:
+	$(GO) run ./cmd/gen-alerts
 
 # Generated AGENTS.md (and sibling copies, when checked out) match docs/.
 docs-check:

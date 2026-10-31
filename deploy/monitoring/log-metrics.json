@@ -1,0 +1,114 @@
+[
+  {
+    "name": "intel_api_5xx",
+    "filter": "jsonPayload.msg=\"request\" AND jsonPayload.status>=500",
+    "description": "intel_api_5xx: More than one percent of read-API requests answered 5xx over five minutes. Severity ticket. Runbook: docs/runbooks/oncall-alerts.md#api-error-rate",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_api_panic",
+    "filter": "jsonPayload.alert_id=\"API_PANIC\"",
+    "description": "intel_api_panic: A handler crashed mid-request; the client got a 500 and the panic value was not logged. Severity page. Runbook: docs/runbooks/oncall-alerts.md#api-panic",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_api_requests",
+    "filter": "jsonPayload.msg=\"request\"",
+    "description": "Count of read-API requests logged by intel-api. Denominator of the API error-rate alert (intel #54). The request line carries the route pattern, status, size and duration only: never a path, body or address. Runbook: docs/runbooks/oncall-alerts.md#api-error-rate",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_api_stopped",
+    "filter": "jsonPayload.alert_id=\"API_STOPPED\"",
+    "description": "intel_api_stopped: intel-api exited non-zero, so the read API is down. Severity page. Runbook: docs/runbooks/oncall-alerts.md#api-stopped",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_ingest_halt",
+    "filter": "jsonPayload.alert_id=\"INGEST_HALT\"",
+    "description": "intel_ingest_halt: intel-worker exited because a ledger could not be ingested correctly. Nothing new is being recorded. Severity page. Runbook: docs/runbooks/oncall-alerts.md#ingest-halt",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_ledger_gap",
+    "filter": "jsonPayload.alert_id=\"INGEST_HALT\" AND (jsonPayload.halt_kind=\"gap\")",
+    "description": "intel_ledger_gap: A halt whose cause is a missing ledger: the checkpoint's next sequence is not what the source serves. Severity page. Runbook: docs/runbooks/oncall-alerts.md#ledger-gap",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_ledger_processed",
+    "filter": "jsonPayload.msg=\"ledger processed\"",
+    "description": "intel_ledger_processed: No ledger was processed for fifteen minutes without a halt being reported: the worker is stuck, not stopped. Severity page. Runbook: docs/runbooks/oncall-alerts.md#ingest-lag",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_snapshot_publish_failed",
+    "filter": "jsonPayload.alert_id=\"SNAPSHOT_PUBLISH_FAILED\"",
+    "description": "intel_snapshot_publish_failed: One publish attempt failed and the loop retries at the next tick. One is noise; a run of them is the stale-snapshot alert. Severity ticket. Runbook: docs/runbooks/oncall-alerts.md#snapshot-publish-failed",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_snapshot_published",
+    "filter": "jsonPayload.msg=\"snapshot published\"",
+    "description": "intel_snapshot_published: No snapshot has been published in twice the publish interval, so Guard clients are approaching their max-age refusal. Severity page. Runbook: docs/runbooks/oncall-alerts.md#snapshot-stale",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_snapshot_rejected",
+    "filter": "jsonPayload.alert_id=\"SNAPSHOT_FILE_REJECTED\"",
+    "description": "intel_snapshot_rejected: A recorded snapshot's file is missing or disagrees with its row, so the API answered 503 instead of serving unverified bytes. Severity page. Runbook: docs/runbooks/oncall-alerts.md#snapshot-file-rejected",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_snapshot_sign_failed",
+    "filter": "jsonPayload.alert_id=\"SNAPSHOT_SIGN_FAILED\"",
+    "description": "intel_snapshot_sign_failed: The signing call failed, so no new snapshot exists. Guard keeps using the last one until it goes stale. Severity page. Runbook: docs/runbooks/oncall-alerts.md#snapshot-sign-failed",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_unclassified_alert",
+    "filter": "jsonPayload.alert=true AND NOT jsonPayload.alert_id=*",
+    "description": "intel_unclassified_alert: A log line asked for an operator but named an alert id the taxonomy does not list, so nothing else would have fired. Severity ticket. Runbook: docs/runbooks/oncall-alerts.md#unclassified-alert",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_writer_lock_lost",
+    "filter": "jsonPayload.alert_id=\"WRITER_LOCK_LOST\"",
+    "description": "intel_writer_lock_lost: The Postgres advisory lock that makes one process the writer for a network went away, so a second writer could start. Severity page. Runbook: docs/runbooks/oncall-alerts.md#writer-lock-lost",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  },
+  {
+    "name": "intel_xdr_unsupported",
+    "filter": "jsonPayload.alert_id=\"INGEST_HALT\" AND (jsonPayload.halt_kind=\"unknown_xdr\" OR jsonPayload.halt_kind=\"unsupported_protocol\" OR jsonPayload.halt_kind=\"invalid_data\")",
+    "description": "intel_xdr_unsupported: A halt whose cause is XDR: an unknown structure, a protocol newer than this build's pin, or a value that breaks a ledger rule. Severity page. Runbook: docs/runbooks/oncall-alerts.md#xdr-unsupported",
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1"
+  }
+]

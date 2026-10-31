@@ -336,8 +336,13 @@ func TestRunRetriesThenGivesUp(t *testing.T) {
 	f.setFailNext(1000)
 	in2 := newIngester(t, src, ingest.NewMemoryCheckpoint(), sink, 100)
 	err := in2.Run(context.Background())
-	if err == nil || ingest.IsHalt(err) || !errors.Is(err, rpc.ErrBadResponse) {
-		t.Fatalf("Run = %v, want give-up after retries", err)
+	// Giving up is a halt of its own kind: Run returns, the process exits, and the
+	// caller must alert rather than read it as one more retryable round (intel #54
+	// named this cause, so the source error stays wrapped underneath it).
+	if err == nil || !ingest.IsHalt(err) || !errors.Is(err, rpc.ErrBadResponse) ||
+		!errors.Is(err, ingest.ErrRetriesExhausted) ||
+		ingest.HaltKind(err) != ingest.HaltRetriesExhausted {
+		t.Fatalf("Run = %v, want a retries_exhausted halt over the source error", err)
 	}
 }
 
