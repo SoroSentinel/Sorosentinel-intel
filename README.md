@@ -1,9 +1,10 @@
-<!-- TODO: add a banner/logo image here once one exists. -->
+![SoroSentinel Intel Banner](media/sorosentinel-intel.jpg)
 
 # SoroSentinel Intel
 
 [![CI](https://github.com/SoroSentinel/Sorosentinel-intel/actions/workflows/ci.yml/badge.svg)](https://github.com/SoroSentinel/Sorosentinel-intel/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/SoroSentinel/Sorosentinel-intel/badge)](https://scorecard.dev/viewer/?uri=github.com/SoroSentinel/Sorosentinel-intel)
+[![Docs](https://img.shields.io/badge/docs-GitHub_Pages-blue.svg)](https://sorosentinel.github.io/Sorosentinel-intel/)
 ![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go)
 ![Stellar](https://img.shields.io/badge/Stellar-Soroban-black)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -32,15 +33,15 @@ Two things the film shows instead of claiming. `"statements": []` is printed wit
 
 Music: ["Business Moves Vol. 9"](https://www.ende.app) by Sascha Ende, used under CC BY 4.0. Sound effects are CC0 from [Kenney.nl](https://kenney.nl) (keyboard set by unicae_games).
 
-## Maintainers | [Telegram](TODO-telegram-group-link)
+## Maintainers
 
 | Maintainer | GitHub | Contact |
 |---|---|---|
-| TODO name | [@TODO](https://github.com/TODO) | [Telegram](https://t.me/TODO) |
+| Allison | [@Teescom](https://github.com/Teescom) | [GitHub](https://github.com/Teescom) |
 
 ## Community
 
-Questions and coordination: [Telegram group](TODO-telegram-group-link).
+Questions and coordination: [GitHub Discussions](https://github.com/SoroSentinel/Sorosentinel-intel/discussions) and [Issues](https://github.com/SoroSentinel/Sorosentinel-intel/issues). Live documentation: [Documentation site](https://sorosentinel.github.io/Sorosentinel-intel/).
 
 ## How the pieces fit
 
