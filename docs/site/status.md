@@ -34,12 +34,7 @@ Counts read out of the trees on the date above.
 6 commands (`intel-ingest`, `intel-worker`, `intel-api`, `gen-alerts`,
 `wordlint`, `intel-fuzz-seeds`), the snapshot builder and verifier, the verdict
 rule table, ledger-gap and lease handling, and halt-on-unknown-XDR ingestion.
-**Two detectors produce signals: `D-ASSET-LOOKALIKE` and
-`D-HOMEDOMAIN-MISMATCH`.** A `D-CONTRACT-SCAN` identifier appears in the schemas
-and docs, but no code path writes that evidence: the `ScanReport → evidence`
-wire is not built (Intel #50, #51). There is no analyst confirmation tool, so the
-top verdict level — the one only a human can set — cannot be reached through the
-product at all.
+**Three detectors produce signals: `D-ASSET-LOOKALIKE`, `D-HOMEDOMAIN-MISMATCH`, and `D-CONTRACT-SCAN`.** `scanevidence` validates and ingests sandboxed `ScanReport` JSON into write-once evidence, linking bytecode indicators to entity verdicts (Intel #50). There is no analyst confirmation tool, so the top verdict level — the one only a human can set — cannot be reached through the product at all.
 
 **Scan** — `scan-core` plus a one-shot CLI, 7 indicators, 6 `not_checked` codes,
 SARIF 2.1.0 output, a `scratch`-based sandbox image, fuzz targets, and the
@@ -77,8 +72,8 @@ published, on `127.0.0.1`.
 | Deployment | Nothing runs anywhere. No public API URL, no public snapshot URL, no production key to pin | Project owner (Intel #33, #46) |
 | Precision | **Unmeasured.** There is no labelled corpus, so nobody can state what the detectors catch or how often they are wrong. The PRD's ≥98% precision target has no evidence for or against it | Corpora labelling (corpus #1, Scan #29, Intel #45) |
 | Wallet | Zero integrations. End-user value flows through wallets, so with none there are no users | Project owner (Guard #38) |
-| Repo identity | No logo or banner; no maintainer table, Telegram or security-contact email; 0 required PR approvals and one maintainer | Project owner (Intel #70) |
-| Scan → Intel | The `ScanReport → evidence` ingest path is not written | Code (Intel #50, #51) |
+| Repo identity | **Closed 2026-11-01.** SVG vector banners, docs badges, lead maintainer (@Teescom), security email, secret scanning & push protection, and branch protection enabled | Closed (PRs #92, #71, #46) |
+| Scan → Intel | **Wired 2026-11-01.** `scanevidence` validates and ingests `ScanReport` JSON into write-once evidence and recomputes verdicts | Closed (Intel #50 / PR #94) |
 | Product-flow demo | **Recorded on 2026-11-01.** `sorosentinel-intel/media/demo-flow.mp4` — 88 seconds of the real flow, every line verbatim stdout from the run written up in `docs/runbooks/demo-rerun-2026-11.md` §6. The three brand films are identity pieces and do not substitute for it | Closed; re-shoot after Protocol 30 (below) |
 
 Eleven runbooks exist in `sorosentinel-intel/docs/runbooks/`. There is no
