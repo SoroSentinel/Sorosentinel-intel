@@ -19,10 +19,14 @@ own. A report is a set of facts about one WASM module at one point in time.
 | `S-CROSS-CALL` | yes | it imports `call` or `try_call` | none |
 | `S-NO-SPEC` | yes | the module has no contract-spec custom section | none |
 | `S-OLD-SDK` | yes | its own `contractenvmetav0` claim is a protocol version below `OLD_PROTOCOL_FLOOR` (21) | `claimed_protocol_version`, `claimed_pre_release` |
-| `S-SEP41-DEVIATION` | yes | it claims the SEP-41 interface and its own spec is missing or mis-typed against the 10 required functions | declared and required counts, the required name list, missing and deviating names (deviation list capped at 3, count always complete) |
+| `S-SEP41-DEVIATION` | yes | the module's own spec declares **at least 3 of the 10** SEP-41 function names — enough to read as a token claim — and the signatures it declares then differ from the interface, or names are missing | declared and required counts, the required name list, missing and deviating names (deviation list capped at 3, count always complete) |
 
 `S-KNOWN-BAD-HASH` is the only level-raising indicator, and it is only as good as
 the hash list handed to it: nothing is fetched, and no list ships with the crate.
+
+The absence of `S-SEP41-DEVIATION` is not conformance. A module that declares
+nothing token-like is never compared at all, so `NC-SEP41-CONFORMANCE` stays in
+`not_checked` whether or not the indicator fired.
 
 ## Claims are treated as claims
 
@@ -72,13 +76,16 @@ never quietly trimmed into a result.
 | `MAX_SPEC_DEPTH` | 8 |
 | `MAX_SPEC_STRINGS` | 20,000 |
 
-The spec caps were set by measuring **61 distinct contract modules across 6,000
-testnet ledgers** (largest spec body 28,056 bytes, peak 117 entries, depth 3).
-The env-meta shape and the `OLD_PROTOCOL_FLOOR` choice were measured from a
-separate sample of **73 distinct modules across 3,000 testnet ledgers** on
-2026-10-28, where every entry was exactly 12 bytes with kind 0 and `protocol`
-ranged 21 to 29. `MAX_MODULE_BYTES` still carries a `TODO(verify)` against the
-network's own maximum contract size.
+**Which of these are measured and which are chosen.** The four `MAX_SPEC_*` caps
+are the only ones derived from a sample: **61 distinct contract modules across
+6,000 testnet ledgers** (measured 2026-10-29 — largest spec body 28,056 bytes,
+peak 117 entries, depth 3). The env-meta entry shape and the `OLD_PROTOCOL_FLOOR`
+choice come from a separate sample of **73 distinct modules across 3,000 testnet
+ledgers** (2026-10-28), where every entry was exactly 12 bytes with kind 0 and
+`protocol` ranged 21 to 29. Every other cap above is a chosen safety limit, not a
+measurement, and `MAX_MODULE_BYTES` carries a `TODO(verify)` against the network's
+own maximum contract size, which the module header says must be checked before
+that cap is trusted.
 
 ## Running it
 
@@ -98,9 +105,14 @@ sorosentinel-scan <file.wasm | -> [--known-bad-hashes <file>] [--format json|sar
 - `--format sarif` emits SARIF 2.1.0 for CI. No Scan result is a determination,
   so the log claims no severity: every result is `level: none`, and informational
   indicators additionally carry `kind: informational`.
-- `make sandbox` builds the container image Intel runs it in: a static musl
-  binary on a `scratch` base, no shell, no package manager, no network tools,
-  running as an unprivileged uid. Contract code is never executed.
+- `make sandbox` builds the image Intel runs: a static musl binary on a `scratch`
+  base, no shell, no package manager, no network tools, uid 65534.
+- `sandbox/run.sh` is the isolation Intel is meant to launch it with, and it is
+  readable rather than assumed: `--network none`, `--read-only`, `--cap-drop ALL`,
+  `no-new-privileges`, a syscall allowlist (`sandbox/seccomp.json`), `--memory
+  256m` with swap equal, `--pids-limit 16`, and the container killed after
+  `SCAN_TIMEOUT` (default 30 s). Contract code is never executed, in this or
+  anywhere else.
 
 ## Status
 
