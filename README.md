@@ -28,6 +28,8 @@ That is Intel plus Guard in one command: seven steps, 4 minutes 8 seconds, measu
 
 Two things the film shows instead of claiming. `"statements": []` is printed with its reason next to it: all twelve wording templates are still draft, so the renderer fails closed and the API answers with a level and facts, no sentence. And `not_checked: NC-EXECUTION-TIME` appears on both Guard results, including the control — a clean result still carries what was not checked. The film does not show contract WASM scanning, because `make demo` does not run it.
 
+**Re-running it has an expiry date, and that is the product working.** Testnet reaches Protocol 30 at **2026-11-03 17:00 UTC**; this build pins XDR for protocol 29 (`xdrcompat.MaxProtocol`), so from that ledger onward `make demo` stops at step 4 with `intel-worker stopped` and an `unsupported protocol version` error. Ingestion refuses to guess a ledger shape it has not been taught, so it halts rather than returning something that looks clean. The film above is a recording of a passing run; [docs/runbooks/protocol-30-preflight-2026-10.md](docs/runbooks/protocol-30-preflight-2026-10.md) is the procedure that makes it pass again, and it waits on the `go-stellar-sdk` v0.8.0 pin (issue #37) — not on raising the ceiling, which would be the wrong fix.
+
 Music: ["Business Moves Vol. 9"](https://www.ende.app) by Sascha Ende, used under CC BY 4.0. Sound effects are CC0 from [Kenney.nl](https://kenney.nl) (keyboard set by unicae_games).
 
 ## Maintainers | [Telegram](TODO-telegram-group-link)
