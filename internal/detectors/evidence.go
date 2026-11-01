@@ -16,6 +16,7 @@ import (
 const (
 	ClassOnchainPattern = "onchain-pattern"
 	ClassDomain         = "domain"
+	ClassScan           = "scan"
 )
 
 // MaxAutomatedLevel is the highest level automated evidence can support.
