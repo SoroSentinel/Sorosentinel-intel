@@ -79,21 +79,30 @@ published, on `127.0.0.1`.
 | Wallet | Zero integrations. End-user value flows through wallets, so with none there are no users | Project owner (Guard #38) |
 | Repo identity | No logo or banner; no maintainer table, Telegram or security-contact email; 0 required PR approvals and one maintainer | Project owner (Intel #70) |
 | Scan → Intel | The `ScanReport → evidence` ingest path is not written | Code (Intel #50, #51) |
-| Product-flow demo | No video of the real flow; the two brand films in the READMEs are not substitutes | Blocked on a running stack |
+| Product-flow demo | **Recorded on 2026-11-01.** `sorosentinel-intel/media/demo-flow.mp4` — 88 seconds of the real flow, every line verbatim stdout from the run written up in `docs/runbooks/demo-rerun-2026-11.md` §6. The three brand films are identity pieces and do not substitute for it | Closed; re-shoot after Protocol 30 (below) |
 
-Nine runbooks exist in `sorosentinel-intel/docs/runbooks/`. There is no
+Eleven runbooks exist in `sorosentinel-intel/docs/runbooks/`. There is no
 `mainnet-launch.md`, because there has been no launch attempt.
 
 ## Protocol 30
 
 Ingestion and decoding read raw ledger XDR, so both depend on the XDR library
-version. Protocol 30 is scheduled for **testnet on 2026-11-03** and **mainnet
-vote on 2026-11-23**. The delta is 12 new union arms across 3 unions; only
-`ScAddressTypeMuxedContract` touches Guard, and CAP-0088 is the Intel blocker.
-`docs/runbooks/protocol-30-preflight-2026-10.md` and
+version. Protocol 30 is scheduled for **testnet at 17:00 UTC on 2026-11-03** and
+**mainnet activation at 17:00 UTC on 2026-11-23**. The delta is 12 new union arms
+across 3 unions; only `ScAddressTypeMuxedContract` touches Guard, and CAP-0088 is
+the Intel blocker. `docs/runbooks/protocol-30-preflight-2026-10.md` and
 `docs/runbooks/protocol-upgrade.md` are the procedure. A mainnet run needs
 `-page-size 10`: at 50, mainnet metadata (~2.9 MB/ledger against testnet's
 ~314 KiB) exceeds the client's 64 MiB body cap and ingestion halts by design.
+
+**The demo stops on that date, and that is the design.** Intel pins
+`go-stellar-sdk` v0.7.3 and refuses any ledger above protocol 29
+(`internal/ingest/xdrcompat`), so from the first Protocol 30 testnet ledger
+`make demo` fails at step 4 with `intel-worker stopped`: ingestion will not
+guess a ledger shape it has not been taught. The film above is a recording of a
+passing run. What makes the run pass again is the pinned XDR upgrade (issue #37),
+which becomes eligible under the 14-day rule at 2026-11-03T21:30Z — raising the
+compatibility ceiling to force a green result would be the wrong fix.
 
 ## Security posture
 
