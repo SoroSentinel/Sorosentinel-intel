@@ -62,3 +62,19 @@ Keep the stack up to curl it yourself: `DEMO_KEEP_STACK=1 make demo`, then `curl
 The testnet Protocol 30 vote is scheduled for 2026-11-03. From that ledger onward `intel-worker` **halts by design** — `xdrcompat` refuses an unknown protocol — and this demo fails at step 4 with `intel-worker stopped`. That is the intended behavior, not a regression: ingestion never guesses a ledger shape (AGENTS.md §7a).
 
 The demo works again once the XDR pin is bumped to `go-stellar-sdk` v0.8.0 per [protocol-30-preflight-2026-10.md](protocol-30-preflight-2026-10.md) and ARCHITECTURE §12 (Intel #37). Do not raise `xdrcompat.MaxProtocol` to make the run pass. After that bump, re-run this record and replace the numbers; a dated runbook is only worth as much as its date.
+
+## 6. The 13:14Z run — the numbers in the README film
+
+`make demo` was run a second time the same afternoon, on the same commits, and its output is what the 88-second film in the README shows. The numbers differ from §2 only because the stack started from a later ledger and Friendbot handed out different throwaway accounts. Everything in §3 and §5 applies to this run as well.
+
+| Item | Value |
+|---|---|
+| Worker start | ledger **5503035** |
+| Trustline ledger | **5503042**, issuer `GAVZ…MA6UH` with `home_domain example.com` |
+| Asset key | `USDC:GAVZ…MA6UH` — the carrier the film follows |
+| Snapshot | **version 3, 1 entry**, `key_id demo-test-key`, `generated_at 2026-11-01T13:14:41Z`, entry hash `c3557f9811b8c64d2153c3b5c2bd1dc1` |
+| Read API | `"signal_level": "caution"`, `"as_of": "2026-11-01T13:14:13Z"`, `"ruleset_version": "2026.10.1"`, `"disputed": false`, `"statements": []` |
+| Guard, look-alike | `status: findings_present`, `operations: 1`, `snapshot: verified`, `effects: 1`, `native delta_min=-100 delta_max=0 assurance=ledger`, `high G-TRUST-FLAGGED entity_type=asset roles=trustline`, `not_checked: NC-EXECUTION-TIME` |
+| Guard, control | `status: no_issues_found`, `findings: 0`, same `not_checked` |
+
+The film adds no claim this table does not carry. Accounts are abbreviated to their first and last characters for the same reason as in §2: they are throwaway testnet accounts, and a truncated identifier is harder to mistake for a real one.

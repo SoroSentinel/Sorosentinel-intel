@@ -20,6 +20,16 @@ No real account, asset or transaction hash appears in it: the issuer is shown tr
 
 Music: ["Business Moves Vol. 12"](https://www.ende.app) by Sascha Ende, used under CC BY 4.0.
 
+### The whole flow, end to end
+
+[![An 88-second film: one asset key printed on a run record — issued on testnet, stored as evidence, given a `caution` signal, packed into a signed snapshot, then stopped by Guard as `findings_present`](media/demo-flow.jpg)](media/demo-flow.mp4)
+
+That is Intel plus Guard in one command: seven steps, 4 minutes 8 seconds, measured. Every line of product text in the film is verbatim stdout from the 13:14Z run of `make demo` on 2026-11-01, whose numbers are in [docs/runbooks/demo-rerun-2026-11.md](docs/runbooks/demo-rerun-2026-11.md) §6 — nothing is mocked up and no screen was redrawn. Accounts are abbreviated to their first and last characters; they are throwaway testnet accounts.
+
+Two things the film shows instead of claiming. `"statements": []` is printed with its reason next to it: all twelve wording templates are still draft, so the renderer fails closed and the API answers with a level and facts, no sentence. And `not_checked: NC-EXECUTION-TIME` appears on both Guard results, including the control — a clean result still carries what was not checked. The film does not show contract WASM scanning, because `make demo` does not run it.
+
+Music: ["Business Moves Vol. 9"](https://www.ende.app) by Sascha Ende, used under CC BY 4.0. Sound effects are CC0 from [Kenney.nl](https://kenney.nl) (keyboard set by unicae_games).
+
 ## Maintainers | [Telegram](TODO-telegram-group-link)
 
 | Maintainer | GitHub | Contact |
