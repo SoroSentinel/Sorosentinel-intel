@@ -1,3 +1,7 @@
+---
+title: What Scan reports
+---
+
 # Scan indicators
 
 Every indicator `scan-core` can emit, with what triggers it. Source of truth:

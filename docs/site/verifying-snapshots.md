@@ -1,3 +1,7 @@
+---
+title: Verifying snapshots
+---
+
 # Verifying snapshots
 
 A snapshot is a signed list of flagged entities that a wallet can check offline.

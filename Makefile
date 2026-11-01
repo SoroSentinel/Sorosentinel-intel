@@ -15,7 +15,7 @@ fmt:
 lint:
 	@unformatted="$$(gofmt -l .)"; if [ -n "$$unformatted" ]; then echo "gofmt needed:"; echo "$$unformatted"; exit 1; fi
 	$(GO) vet ./...
-	$(GO) run ./cmd/wordlint -dir wording -docs docs/methodology
+	$(GO) run ./cmd/wordlint -dir wording -docs docs/methodology,docs/site
 
 # Store integration tests skip unless INTEL_TEST_DATABASE_URL is set; CI's
 # integration job runs them against a Postgres 16 service (see ci.yml).
