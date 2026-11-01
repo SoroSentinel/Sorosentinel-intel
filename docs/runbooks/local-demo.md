@@ -5,6 +5,8 @@ worker and read API in Docker, a look-alike asset issued with throwaway
 accounts, and Guard analyzing a trustline to it. It is for development and for
 recording a demo; it is not a deployment (no cloud provider is chosen yet).
 
+Dated run records live next to this file. The most recent is [demo-rerun-2026-11.md](demo-rerun-2026-11.md) — a 2026-11-01 PASS in 4 m 8 s on protocol 29, with the API and Guard output it printed. Quote a record, not this runbook, when a claim needs a date.
+
 Testnet only. The worker is fixed to testnet, and the script and the issuing
 tool both refuse an RPC endpoint that does not report the testnet passphrase.
 The snapshot signing key is a **throwaway test key** generated inside the stack
