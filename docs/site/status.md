@@ -1,3 +1,7 @@
+---
+title: Project status
+---
+
 # Project status
 
 Measured against `origin/main` in all three repos on **2026-11-01**. Re-measure
