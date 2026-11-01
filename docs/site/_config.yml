@@ -1,0 +1,5 @@
+title: SoroSentinel
+description: Security tooling for the Stellar ecosystem. How its signals work, what is actually live, and how to check its output yourself.
+theme: jekyll-theme-minimal
+show_downloads: false
+markdown: kramdown
