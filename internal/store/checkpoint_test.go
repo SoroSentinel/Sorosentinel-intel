@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,9 +15,19 @@ import (
 // SIGKILLed or rebooted worker looks like to Postgres: the session goes, and a
 // session-level advisory lock goes with it. No lock-table surgery, which is
 // what the reclaim assertions below are about.
+//
+// pg_terminate_backend only signals the backend unless given a timeout; without
+// one, the next statement can still see the dying session's lock. With a
+// timeout (Postgres 14+) it waits until the backend has exited.
 func terminateSession(ctx context.Context, pool *pgxpool.Pool, pid int) error {
-	_, err := pool.Exec(ctx, "SELECT pg_terminate_backend($1)", pid)
-	return err
+	var ended bool
+	if err := pool.QueryRow(ctx, "SELECT pg_terminate_backend($1, 5000)", pid).Scan(&ended); err != nil {
+		return err
+	}
+	if !ended {
+		return fmt.Errorf("backend %d still running 5s after termination", pid)
+	}
+	return nil
 }
 
 func holderPID(ctx context.Context, l *WriterLock) (int, error) {
@@ -36,6 +47,9 @@ func TestWriterLeaseReclaimedAfterHolderDies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Cleanups run before freshDB's pool.Close, which would otherwise wait
+	// forever on a connection a failed assertion left checked out.
+	t.Cleanup(func() { holder.Release(ctx) })
 	pid, err := holderPID(ctx, holder)
 	if err != nil {
 		t.Fatalf("holder pid: %v", err)
@@ -52,11 +66,10 @@ func TestWriterLeaseReclaimedAfterHolderDies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stale lease was not reclaimable: %v", err)
 	}
+	t.Cleanup(func() { next.Release(ctx) })
 	if err := next.Ping(ctx); err != nil {
 		t.Errorf("new holder cannot confirm its lease: %v", err)
 	}
-	next.Release(ctx)
-	holder.Release(ctx) // discards the dead connection
 }
 
 // TestWriterLeaseLossIsReportedToWatch is the path cmd/intel-worker selects on
@@ -69,7 +82,7 @@ func TestWriterLeaseLossIsReportedToWatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer holder.Release(ctx)
+	t.Cleanup(func() { holder.Release(ctx) })
 	pid, err := holderPID(ctx, holder)
 	if err != nil {
 		t.Fatalf("holder pid: %v", err)
