@@ -55,7 +55,26 @@ Data flows Scan → Intel → signed snapshot/API → Guard. The repos only talk
 
 ## Status
 
-Phase 1 complete in code; the Phase 1 exit test passed on testnet on 2026-10-28. In place: RPC-only ingestion with checkpoints and gap detection, the asset look-alike and home-domain detectors, Postgres evidence and verdict storage with a rule table, the SSRF-safe fetcher, `cmd/intel-worker` publishing an Ed25519-signed snapshot, the read API (`cmd/intel-api`), shared schemas and vectors (pre-release tag `v0.1.0-next.0`), and the fail-closed wording renderer. Not yet: counsel-approved wording (all templates are drafts), a KMS signer, deployment, and the Protocol 30 XDR upgrade.
+**v0.1.0 released on 2026-11-01.** The Phase 1 exit test passed on testnet on 2026-10-28: a look-alike asset is flagged, a signed snapshot is published, and Guard warns before signing.
+
+In place:
+- Stellar RPC ingestion with checkpoints, gap detection and a per-network single-writer lock
+- the asset look-alike and home-domain detectors, with the SSRF-safe fetcher
+- Postgres evidence and verdict storage with a reproducible rule table
+- Scan reports stored as evidence
+- `intel-worker`, publishing an Ed25519-signed snapshot, and the read API (`intel-api`)
+- alert classification with on-call runbooks
+- shared schemas and vectors
+- the fail-closed wording renderer
+
+Not yet:
+- **Counsel-approved wording.** All templates are drafts, so findings carry facts but no prose (#32).
+- **A hosted deployment.** GCP is chosen (ADR 0006); see #33.
+- **A KMS-held signing key** (#34).
+- **The three remaining v1 detectors** (#47, #48, #49).
+- **The Protocol 30 XDR bump** (#37). The upgrade script is staged; testnet ingestion halts by design from the testnet upgrade on 2026-11-03 until the bump lands.
+
+How SoroSentinel relates to StellarExpert, Assay and other Stellar tools: [comparison page](https://sorosentinel.github.io/Sorosentinel-intel/comparison.html).
 
 ## Quick start
 
@@ -107,7 +126,7 @@ and are re-checked against the hash in the ledger entry they came from.
 
 ## Contributing
 
-Pick an open issue (Wave issues carry the `Stellar Wave` label), comment to be assigned, then follow [CONTRIBUTING.md](CONTRIBUTING.md). Every PR must pass `make verify`. AI coding agents must follow [AGENTS.md](AGENTS.md).
+Pick an open issue (every issue is labeled by difficulty, type and area; new contributors can start with `good first issue`), comment to be assigned, then follow [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Every PR must pass `make verify`. AI coding agents must follow [AGENTS.md](AGENTS.md).
 
 ## Security
 
