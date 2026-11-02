@@ -125,4 +125,5 @@ Detailed guide: [Verifying a snapshot yourself](verifying-snapshots.html) and [W
 - [What Intel publishes](reference/intel-signals.html) — 4 public signal names (`consistent`, `no_signals`, `caution`, `high_caution`).
 - [Verifying a snapshot yourself](verifying-snapshots.html) — snapshot format specification and shared test vectors.
 - [Project status](status.html) — verified testnet runs, test coverage, and Protocol 30 window.
+- [How SoroSentinel compares](comparison.html) — StellarExpert, Assay, Stellar Agent Guard, contract scanners and transaction explainers.
 - [GitHub Organization](https://github.com/SoroSentinel) — source code for Intel, Guard, and Scan.
