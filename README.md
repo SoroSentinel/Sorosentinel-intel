@@ -41,7 +41,7 @@ Music: ["Business Moves Vol. 9"](https://www.ende.app) by Sascha Ende, used unde
 
 ## Community
 
-Questions and coordination: [GitHub Discussions](https://github.com/SoroSentinel/Sorosentinel-intel/discussions) and [Issues](https://github.com/SoroSentinel/Sorosentinel-intel/issues). Live documentation: [Documentation site](https://sorosentinel.github.io/Sorosentinel-intel/).
+Questions and coordination: [Issues](https://github.com/SoroSentinel/Sorosentinel-intel/issues). Live documentation: [Documentation site](https://sorosentinel.github.io/Sorosentinel-intel/).
 
 ## How the pieces fit
 
