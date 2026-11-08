@@ -32,7 +32,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          # Always the tag: a bare name would resolve to a branch of the same
+          # name first, letting unreviewed branch code be built under a tag
+          # that passes the ancestry check below.
+          ref: refs/tags/${{ github.event.release.tag_name || inputs.tag }}
           fetch-depth: 0
           persist-credentials: false
       - name: Verify release tag ancestry
@@ -40,7 +43,12 @@ jobs:
           set -eu
           case "$TAG" in v[0-9]*) ;; *) echo "not a version tag: $TAG" >&2; exit 1 ;; esac
           git fetch origin main
-          git merge-base --is-ancestor "$TAG" origin/main || {
+          tag_commit=$(git rev-parse "refs/tags/$TAG^{commit}")
+          if [ "$(git rev-parse HEAD)" != "$tag_commit" ]; then
+            echo "Error: checked-out commit is not the commit tag $TAG points to" >&2
+            exit 1
+          fi
+          git merge-base --is-ancestor "$tag_commit" origin/main || {
             echo "Error: Tag $TAG is not an ancestor of origin/main" >&2
             exit 1
           }
