@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/stellar/go-stellar-sdk v0.8.0
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 )
 
 require (
