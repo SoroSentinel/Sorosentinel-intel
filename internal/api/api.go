@@ -18,6 +18,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/entity"
@@ -59,6 +60,10 @@ type Config struct {
 	RateLimit float64
 	// BurstLimit is the maximum token bucket capacity per IP (0 uses DefaultBurstLimit).
 	BurstLimit int
+	// TrustedProxies are the load balancer or gateway addresses whose
+	// X-Forwarded-For is believed when identifying the client. Empty means the
+	// connecting address is the client.
+	TrustedProxies []netip.Prefix
 }
 
 type Server struct {
