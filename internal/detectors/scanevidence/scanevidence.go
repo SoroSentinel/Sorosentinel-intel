@@ -40,11 +40,11 @@ const (
 	SourceName = "scan.cli"
 )
 
-// KnownIndicators maps every recognized scan indicator code to whether Intel
+// knownIndicators maps every recognized scan indicator code to whether Intel
 // treats it as informational. Intel determines indicator classifications
 // independently of untrusted scan report claims. Unknown indicator codes are
-// rejected.
-var KnownIndicators = map[string]bool{
+// rejected. Unexported so no caller can reclassify an indicator at run time.
+var knownIndicators = map[string]bool{
 	"S-UPGRADEABLE":       true,
 	"S-CREATES-CONTRACTS": true,
 	"S-CROSS-CALL":        true,
@@ -136,7 +136,7 @@ func (r *ScanReport) Validate() error {
 		if !indicatorCodeRe.MatchString(ind.Code) {
 			return fmt.Errorf("%w: indicator[%d] invalid code %q", ErrInvalidReport, i, ind.Code)
 		}
-		isInfo, ok := KnownIndicators[ind.Code]
+		isInfo, ok := knownIndicators[ind.Code]
 		if !ok {
 			return fmt.Errorf("%w: indicator[%d] unknown code %q", ErrInvalidReport, i, ind.Code)
 		}
@@ -195,12 +195,12 @@ func Transform(r *ScanReport, network entity.Network, asOf time.Time) (*detector
 	// Automated level ceiling:
 	// Informational indicators never raise a level alone (stay at unknown).
 	// If any non-informational indicator exists, level becomes suspicious.
-	// Intel determines this directly from KnownIndicators, not the report's claims.
+	// Intel determines this directly from knownIndicators, not the report's claims.
 	maxLevel := signal.Unknown
 	var codes []string
 	for _, ind := range r.Indicators {
 		codes = append(codes, ind.Code)
-		isInfo, ok := KnownIndicators[ind.Code]
+		isInfo, ok := knownIndicators[ind.Code]
 		if !ok || !isInfo {
 			maxLevel = signal.Suspicious
 		}
@@ -285,7 +285,8 @@ type IngestResult struct {
 }
 
 // Ingest parses, validates, and stores a ScanReport, recomputing the WASM hash's verdict.
-// If expectedWasmSHA256 is non-empty, it verifies that the report's wasm_sha256 matches it.
+// expectedWasmSHA256 is the hash of the WASM Intel handed to the scan job; it is
+// required, and a report about any other module is rejected.
 func Ingest(
 	ctx context.Context,
 	s Store,
@@ -300,10 +301,11 @@ func Ingest(
 	if err != nil {
 		return nil, err
 	}
-	if expectedWasmSHA256 != "" {
-		if err := report.VerifyWasmSHA256(expectedWasmSHA256); err != nil {
-			return nil, err
-		}
+	if !sha256HexRe.MatchString(strings.ToLower(expectedWasmSHA256)) {
+		return nil, fmt.Errorf("%w: expected wasm_sha256 is required", ErrInvalidReport)
+	}
+	if err := report.VerifyWasmSHA256(expectedWasmSHA256); err != nil {
+		return nil, err
 	}
 
 	sourceID, err := s.EnsureSource(ctx, SourceName, evidence.Scan)
@@ -342,4 +344,11 @@ func Ingest(
 		Verdict:        v,
 		VerdictChanged: changed,
 	}, nil
+}
+
+// IsInformational reports whether Intel treats indicator code as informational,
+// and whether the code is known at all.
+func IsInformational(code string) (informational, known bool) {
+	informational, known = knownIndicators[code]
+	return informational, known
 }

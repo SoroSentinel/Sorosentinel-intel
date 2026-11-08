@@ -3,6 +3,7 @@ package scanevidence_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -235,6 +236,23 @@ func TestIngest_EndToEnd(t *testing.T) {
 	)
 	if err == nil {
 		t.Fatal("expected error on mismatched wasm_sha256")
+	}
+
+	// A missing expected hash is refused, never treated as "skip the check".
+	for _, missing := range []string{"", "not-a-hash"} {
+		if _, err := scanevidence.Ingest(context.Background(), fs, []byte(sampleValidJSON), missing,
+			entity.Public, asOf, 12345, verdict.V1); !errors.Is(err, scanevidence.ErrInvalidReport) {
+			t.Fatalf("expected wasm_sha256 %q: got %v, want ErrInvalidReport", missing, err)
+		}
+	}
+	if len(fs.evidences) != 0 {
+		t.Fatalf("a refused report must store nothing, got %d evidence rows", len(fs.evidences))
+	}
+	if info, known := scanevidence.IsInformational("S-KNOWN-BAD-HASH"); info || !known {
+		t.Fatal("S-KNOWN-BAD-HASH must be a known, level-raising indicator")
+	}
+	if _, known := scanevidence.IsInformational("S-MADE-UP"); known {
+		t.Fatal("unknown codes must not be known")
 	}
 
 	res, err := scanevidence.Ingest(
