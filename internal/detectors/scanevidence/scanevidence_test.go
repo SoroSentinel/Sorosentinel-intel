@@ -78,7 +78,13 @@ func TestParse_ValidationErrors(t *testing.T) {
 		{"invalid ruleset", strings.Replace(sampleValidJSON, "2026.10.1", "bad-version", 1)},
 		{"empty not_checked", strings.Replace(sampleValidJSON, `"NC-AUTH-CHECKS",
     "NC-RUNTIME-BEHAVIOR"`, "", 1)},
-		{"invalid indicator code", strings.Replace(sampleValidJSON, "S-UPGRADEABLE", "lowercase-code", 1)},
+		{"invalid indicator code syntax", strings.Replace(sampleValidJSON, "S-UPGRADEABLE", "lowercase-code", 1)},
+		{"unknown indicator code", strings.Replace(sampleValidJSON, "S-UPGRADEABLE", "S-UNKNOWN-FEATURE", 1)},
+		{"informational flag mismatch", strings.Replace(sampleValidJSON, `"code": "S-UPGRADEABLE",
+      "informational": true`, `"code": "S-UPGRADEABLE",
+      "informational": false`, 1)},
+		{"trailing data after json", sampleValidJSON + " trailing-garbage"},
+		{"trailing json after json", sampleValidJSON + " {}"},
 	}
 
 	for _, tt := range tests {
@@ -186,14 +192,56 @@ func (f *fakeStore) Recompute(_ context.Context, entityID int64, asOf time.Time,
 	}, true, nil
 }
 
+func TestVerifyWasm(t *testing.T) {
+	rep, err := scanevidence.Parse([]byte(sampleValidJSON))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify with expected SHA256 hex string
+	if err := rep.VerifyWasmSHA256("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); err != nil {
+		t.Errorf("expected matching sha to succeed: %v", err)
+	}
+	if err := rep.VerifyWasmSHA256("1111111111111111111111111111111111111111111111111111111111111111"); err == nil {
+		t.Error("expected mismatching sha to fail")
+	}
+
+	// Verify with raw bytes
+	testBytes := []byte("contract bytecode")
+	rep.WasmSHA256 = "5ba85d87d5091881c8ec3c0d77576a4038a43fc2174bb23b2bdbbb3c1055b34f"
+	if err := rep.VerifyWasmBytes(testBytes); err != nil {
+		t.Errorf("expected matching bytes sha to succeed: %v", err)
+	}
+	if err := rep.VerifyWasmBytes([]byte("different bytecode")); err == nil {
+		t.Error("expected mismatching bytes to fail")
+	}
+}
+
 func TestIngest_EndToEnd(t *testing.T) {
 	fs := newFakeStore()
 	asOf := time.Date(2026, 11, 1, 12, 0, 0, 0, time.UTC)
+	const expectedWasm = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+	// Mismatched expected wasm fails
+	_, err := scanevidence.Ingest(
+		context.Background(),
+		fs,
+		[]byte(sampleValidJSON),
+		"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		entity.Public,
+		asOf,
+		12345,
+		verdict.V1,
+	)
+	if err == nil {
+		t.Fatal("expected error on mismatched wasm_sha256")
+	}
 
 	res, err := scanevidence.Ingest(
 		context.Background(),
 		fs,
 		[]byte(sampleValidJSON),
+		expectedWasm,
 		entity.Public,
 		asOf,
 		12345,
