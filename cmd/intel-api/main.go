@@ -37,6 +37,8 @@ type config struct {
 	reviewURL        string
 	requestTimeout   time.Duration
 	maxSnapshotBytes int64
+	rateLimit        float64
+	burstLimit       int
 }
 
 func main() {
@@ -47,6 +49,8 @@ func main() {
 	flag.StringVar(&cfg.reviewURL, "review-url", "", "https URL where a signal can be reviewed, used in statements (required)")
 	flag.DurationVar(&cfg.requestTimeout, "request-timeout", api.DefaultRequestTimeout, "store time budget per request")
 	flag.Int64Var(&cfg.maxSnapshotBytes, "max-snapshot-bytes", api.DefaultMaxSnapshotBytes, "largest snapshot file served")
+	flag.Float64Var(&cfg.rateLimit, "rate-limit", api.DefaultRateLimit, "per-IP requests per second limit (<=0 to disable)")
+	flag.IntVar(&cfg.burstLimit, "burst-limit", api.DefaultBurstLimit, "per-IP burst capacity")
 	flag.Parse()
 
 	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
@@ -103,6 +107,7 @@ func run(ctx context.Context, cfg config, log *slog.Logger) error {
 	srv, err := api.New(api.Config{
 		Store: store.New(pool), Renderer: rnd, SnapshotDir: cfg.snapshotDir,
 		Log: log, RequestTimeout: cfg.requestTimeout, MaxSnapshotBytes: cfg.maxSnapshotBytes,
+		RateLimit: cfg.rateLimit, BurstLimit: cfg.burstLimit,
 	})
 	if err != nil {
 		return err
