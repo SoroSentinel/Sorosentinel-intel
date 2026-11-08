@@ -20,7 +20,7 @@ import (
 // The pinned go-stellar-sdk v0.7.3 carries Protocol 28 XDR; on 2026-10-28 it
 // decoded 50 live testnet Protocol 29 ledgers and re-encoded them byte for
 // byte. Protocol 30 needs v0.8.0+ and the ARCHITECTURE §12 runbook.
-const MaxProtocol = 29
+const MaxProtocol = 30
 
 // ErrUnknownXDR means the ledger could not be decoded completely and exactly
 // by the pinned XDR definitions. Ingestion must halt.

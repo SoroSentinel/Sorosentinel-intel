@@ -278,8 +278,8 @@ func TestHalts(t *testing.T) {
 			b[3] = 7 // LedgerCloseMeta v7
 			f.put(104, xdrtest.Hash(104), b)
 		}, 100, xdrcompat.ErrUnknownXDR, 103},
-		{"protocol 30", func(f *fakeRPC) {
-			f.put(101, xdrtest.Hash(101), xdrtest.Ledger{Seq: 101, Prev: xdrtest.Hash(100), Protocol: 30}.Bytes())
+		{"protocol 31", func(f *fakeRPC) {
+			f.put(101, xdrtest.Hash(101), xdrtest.Ledger{Seq: 101, Prev: xdrtest.Hash(100), Protocol: 31}.Bytes())
 		}, 100, xdrcompat.ErrUnsupportedProtocol, 100},
 		{"hash differs from meta", func(f *fakeRPC) {
 			f.put(101, xdrtest.Hash(999), xdrtest.Ledger{Seq: 101, Prev: xdrtest.Hash(100)}.Bytes())
