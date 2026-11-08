@@ -731,3 +731,55 @@ func TestHTTPServerHasTimeouts(t *testing.T) {
 		t.Errorf("server timeouts must all be set: %+v", hs)
 	}
 }
+
+func TestRateLimiting(t *testing.T) {
+	reg, _ := wording.LoadEmbedded()
+	rnd, _ := wording.NewRenderer(reg, testRenderConfig)
+	st := &fakeStore{results: map[string]store.LookupResult{}}
+	dir := t.TempDir()
+
+	s, err := New(Config{
+		Store:       st,
+		Renderer:    rnd,
+		SnapshotDir: dir,
+		RateLimit:   2.0,
+		BurstLimit:  3,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h := s.Handler()
+
+	for i := 0; i < 3; i++ {
+		req := httptest.NewRequest("GET", "/v1/entities/account/"+gKey(1)+"?network=public", nil)
+		req.RemoteAddr = "192.0.2.1:12345"
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code == http.StatusTooManyRequests {
+			t.Fatalf("request %d should have been allowed under burst limit", i+1)
+		}
+	}
+
+	req := httptest.NewRequest("GET", "/v1/entities/account/"+gKey(1)+"?network=public", nil)
+	req.RemoteAddr = "192.0.2.1:12345"
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusTooManyRequests {
+		t.Fatalf("request 4 should be 429 rate limited, got %d", rec.Code)
+	}
+	if rec.Header().Get("Retry-After") != "1" {
+		t.Errorf("expected Retry-After: 1, got %q", rec.Header().Get("Retry-After"))
+	}
+	if errorCode(t, rec) != codeRateLimited {
+		t.Errorf("expected error %q, got %q", codeRateLimited, errorCode(t, rec))
+	}
+
+	reqOther := httptest.NewRequest("GET", "/v1/entities/account/"+gKey(1)+"?network=public", nil)
+	reqOther.RemoteAddr = "192.0.2.2:54321"
+	recOther := httptest.NewRecorder()
+	h.ServeHTTP(recOther, reqOther)
+	if recOther.Code == http.StatusTooManyRequests {
+		t.Fatalf("different IP should not be rate limited")
+	}
+}

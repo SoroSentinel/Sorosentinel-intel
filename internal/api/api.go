@@ -18,6 +18,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"github.com/SoroSentinel/Sorosentinel-intel/internal/entity"
@@ -55,12 +56,21 @@ type Config struct {
 	Log              *slog.Logger
 	RequestTimeout   time.Duration
 	MaxSnapshotBytes int64
+	// RateLimit is allowed requests per second per IP (0 uses DefaultRateLimit, <0 disables).
+	RateLimit float64
+	// BurstLimit is the maximum token bucket capacity per IP (0 uses DefaultBurstLimit).
+	BurstLimit int
+	// TrustedProxies are the load balancer or gateway addresses whose
+	// X-Forwarded-For is believed when identifying the client. Empty means the
+	// connecting address is the client.
+	TrustedProxies []netip.Prefix
 }
 
 type Server struct {
-	cfg  Config
-	mux  *http.ServeMux
-	snap snapshotCache
+	cfg     Config
+	mux     *http.ServeMux
+	snap    snapshotCache
+	limiter *ipRateLimiter
 }
 
 func New(cfg Config) (*Server, error) {
@@ -80,6 +90,17 @@ func New(cfg Config) (*Server, error) {
 		cfg.MaxSnapshotBytes = DefaultMaxSnapshotBytes
 	}
 	s := &Server{cfg: cfg, mux: http.NewServeMux()}
+	if cfg.RateLimit >= 0 {
+		rate := cfg.RateLimit
+		if rate == 0 {
+			rate = DefaultRateLimit
+		}
+		burst := cfg.BurstLimit
+		if burst <= 0 {
+			burst = DefaultBurstLimit
+		}
+		s.limiter = newIPRateLimiter(rate, burst, s.cfg.Now)
+	}
 	// Methods are checked in the handlers so 404 and 405 are JSON too.
 	s.mux.HandleFunc("/v1/entities/{type}/{id}", s.only(http.MethodGet, s.getEntity))
 	s.mux.HandleFunc("/v1/entities:batchGet", s.only(http.MethodPost, s.batchGet))
@@ -93,7 +114,7 @@ func New(cfg Config) (*Server, error) {
 
 // Handler returns the API with its middleware.
 func (s *Server) Handler() http.Handler {
-	return s.recoverer(s.logRequests(securityHeaders(s.withTimeout(s.mux))))
+	return s.recoverer(s.logRequests(securityHeaders(s.withRateLimit(s.withTimeout(s.mux)))))
 }
 
 // HTTPServer returns a server with timeouts suitable for hostile clients.
@@ -121,6 +142,7 @@ const (
 	codeBodyTooLarge     = "body_too_large"
 	codeUnsupportedMedia = "unsupported_media_type"
 	codeTooManyEntities  = "too_many_entities"
+	codeRateLimited      = "rate_limited"
 	codeInternal         = "internal"
 	codeUnavailable      = "unavailable"
 )

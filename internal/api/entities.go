@@ -109,6 +109,11 @@ func (s *Server) batchGet(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, codeTooManyEntities)
 		return
 	}
+	// A batch costs more of the client's rate budget than a single lookup.
+	if !s.chargeBatch(r, len(req.Entities)) {
+		rateLimited(w)
+		return
+	}
 	keys := make([]store.LookupKey, len(req.Entities))
 	for i, e := range req.Entities {
 		k, code := lookupKey(e.Network, e.Type, e.Key)

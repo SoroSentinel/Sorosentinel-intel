@@ -13,9 +13,12 @@ package scanevidence
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"sort"
 	"strconv"
@@ -36,6 +39,20 @@ const (
 
 	SourceName = "scan.cli"
 )
+
+// knownIndicators maps every recognized scan indicator code to whether Intel
+// treats it as informational. Intel determines indicator classifications
+// independently of untrusted scan report claims. Unknown indicator codes are
+// rejected. Unexported so no caller can reclassify an indicator at run time.
+var knownIndicators = map[string]bool{
+	"S-UPGRADEABLE":       true,
+	"S-CREATES-CONTRACTS": true,
+	"S-CROSS-CALL":        true,
+	"S-NO-SPEC":           true,
+	"S-OLD-SDK":           true,
+	"S-SEP41-DEVIATION":   true,
+	"S-KNOWN-BAD-HASH":    false,
+}
 
 var (
 	sha256HexRe      = regexp.MustCompile(`^[0-9a-f]{64}$`)
@@ -71,7 +88,7 @@ type ScanReport struct {
 var ErrInvalidReport = errors.New("scanevidence: invalid scan report")
 
 // Parse validates raw JSON against the ScanReport schema constraints without
-// allowing unknown fields.
+// allowing unknown fields or trailing data.
 func Parse(data []byte) (*ScanReport, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("%w: empty payload", ErrInvalidReport)
@@ -86,6 +103,11 @@ func Parse(data []byte) (*ScanReport, error) {
 	var r ScanReport
 	if err := dec.Decode(&r); err != nil {
 		return nil, fmt.Errorf("%w: JSON decode failed: %v", ErrInvalidReport, err)
+	}
+
+	var trailing any
+	if err := dec.Decode(&trailing); err != io.EOF {
+		return nil, fmt.Errorf("%w: trailing data after JSON", ErrInvalidReport)
 	}
 
 	if err := r.Validate(); err != nil {
@@ -114,6 +136,13 @@ func (r *ScanReport) Validate() error {
 		if !indicatorCodeRe.MatchString(ind.Code) {
 			return fmt.Errorf("%w: indicator[%d] invalid code %q", ErrInvalidReport, i, ind.Code)
 		}
+		isInfo, ok := knownIndicators[ind.Code]
+		if !ok {
+			return fmt.Errorf("%w: indicator[%d] unknown code %q", ErrInvalidReport, i, ind.Code)
+		}
+		if ind.Informational != isInfo {
+			return fmt.Errorf("%w: indicator %s informational flag mismatch (got %v, want %v)", ErrInvalidReport, ind.Code, ind.Informational, isInfo)
+		}
 		for k, v := range ind.Facts {
 			if len(v) > 512 {
 				return fmt.Errorf("%w: indicator[%d] fact %q exceeds 512 bytes", ErrInvalidReport, i, k)
@@ -125,6 +154,24 @@ func (r *ScanReport) Validate() error {
 	}
 	if r.ClaimedMeta.ProtocolVersion != nil && *r.ClaimedMeta.ProtocolVersion < 0 {
 		return fmt.Errorf("%w: protocol_version cannot be negative", ErrInvalidReport)
+	}
+	return nil
+}
+
+// VerifyWasmBytes verifies that the report's wasm_sha256 matches the sha256 of the given wasm bytes.
+func (r *ScanReport) VerifyWasmBytes(wasmBytes []byte) error {
+	sum := sha256.Sum256(wasmBytes)
+	actual := hex.EncodeToString(sum[:])
+	if r.WasmSHA256 != actual {
+		return fmt.Errorf("%w: wasm_sha256 mismatch (report %q, wasm bytes %q)", ErrInvalidReport, r.WasmSHA256, actual)
+	}
+	return nil
+}
+
+// VerifyWasmSHA256 verifies that the report's wasm_sha256 matches the expected SHA-256 hex string.
+func (r *ScanReport) VerifyWasmSHA256(expectedHex string) error {
+	if !strings.EqualFold(r.WasmSHA256, expectedHex) {
+		return fmt.Errorf("%w: wasm_sha256 mismatch (report %q, expected %q)", ErrInvalidReport, r.WasmSHA256, expectedHex)
 	}
 	return nil
 }
@@ -148,11 +195,13 @@ func Transform(r *ScanReport, network entity.Network, asOf time.Time) (*detector
 	// Automated level ceiling:
 	// Informational indicators never raise a level alone (stay at unknown).
 	// If any non-informational indicator exists, level becomes suspicious.
+	// Intel determines this directly from knownIndicators, not the report's claims.
 	maxLevel := signal.Unknown
 	var codes []string
 	for _, ind := range r.Indicators {
 		codes = append(codes, ind.Code)
-		if !ind.Informational {
+		isInfo, ok := knownIndicators[ind.Code]
+		if !ok || !isInfo {
 			maxLevel = signal.Suspicious
 		}
 	}
@@ -236,10 +285,13 @@ type IngestResult struct {
 }
 
 // Ingest parses, validates, and stores a ScanReport, recomputing the WASM hash's verdict.
+// expectedWasmSHA256 is the hash of the WASM Intel handed to the scan job; it is
+// required, and a report about any other module is rejected.
 func Ingest(
 	ctx context.Context,
 	s Store,
 	rawReport []byte,
+	expectedWasmSHA256 string,
 	network entity.Network,
 	asOf time.Time,
 	ledgerSeq int64,
@@ -247,6 +299,12 @@ func Ingest(
 ) (*IngestResult, error) {
 	report, err := Parse(rawReport)
 	if err != nil {
+		return nil, err
+	}
+	if !sha256HexRe.MatchString(strings.ToLower(expectedWasmSHA256)) {
+		return nil, fmt.Errorf("%w: expected wasm_sha256 is required", ErrInvalidReport)
+	}
+	if err := report.VerifyWasmSHA256(expectedWasmSHA256); err != nil {
 		return nil, err
 	}
 
@@ -286,4 +344,11 @@ func Ingest(
 		Verdict:        v,
 		VerdictChanged: changed,
 	}, nil
+}
+
+// IsInformational reports whether Intel treats indicator code as informational,
+// and whether the code is known at all.
+func IsInformational(code string) (informational, known bool) {
+	informational, known = knownIndicators[code]
+	return informational, known
 }

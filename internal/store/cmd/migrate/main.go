@@ -19,6 +19,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "migrate: INTEL_DATABASE_URL is not set")
 		os.Exit(2)
 	}
+	if err := store.ValidateDatabaseURL(url); err != nil {
+		fmt.Fprintf(os.Stderr, "migrate: %v\n", err)
+		os.Exit(1)
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	pool, err := pgxpool.New(ctx, url)
