@@ -68,7 +68,7 @@ func TestDecodeHalts(t *testing.T) {
 		{"trailing bytes", append(append([]byte{}, good...), 0, 0, 0, 0), xdrcompat.ErrUnknownXDR},
 		{"unknown LedgerCloseMeta version", unknownMeta, xdrcompat.ErrUnknownXDR},
 		{"unknown TransactionMeta version", unknownTxMetaBytes, xdrcompat.ErrUnknownXDR},
-		{"protocol 30", xdrtest.Ledger{Seq: 7, Protocol: 30}.Bytes(), xdrcompat.ErrUnsupportedProtocol},
+		{"protocol 31", xdrtest.Ledger{Seq: 7, Protocol: 31}.Bytes(), xdrcompat.ErrUnsupportedProtocol},
 		{"asset code with embedded NUL", xdrtest.Ledger{Seq: 7, Ops: []xdr.LedgerEntryChanges{
 			{xdrtest.Created(xdrtest.Trustline(1, "U\x00SD", 3))}}}.Bytes(), xdrcompat.ErrInvalidData},
 		{"asset code with non-alphanumeric", xdrtest.Ledger{Seq: 7, Ops: []xdr.LedgerEntryChanges{
