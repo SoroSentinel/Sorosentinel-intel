@@ -11,10 +11,12 @@ import (
 )
 
 // ValidateDatabaseURL verifies that the database connection string adheres to
-// security rules: non-local and non-container hosts must enforce TLS with
-// certificate verification (sslmode=verify-full, verify-ca, or require).
-// Plaintext modes (disable, allow, prefer) or omitted sslmode are refused for
-// remote hosts to prevent credentials and evidence from being transmitted in clear.
+// security rules: non-local and non-container hosts must use TLS that verifies
+// the server certificate (sslmode=verify-full or verify-ca). Plaintext modes
+// (disable, allow, prefer), require (which encrypts but accepts any
+// certificate, so a man in the middle still reads the traffic) and an omitted
+// sslmode are refused for remote hosts. Unix sockets, including the Cloud SQL
+// connector's /cloudsql/<instance> path, never leave the machine and are local.
 func ValidateDatabaseURL(rawURL string) error {
 	if strings.TrimSpace(rawURL) == "" {
 		return errors.New("database URL is empty")
@@ -48,16 +50,19 @@ func ValidateDatabaseURL(rawURL string) error {
 	}
 
 	switch sslmode {
-	case "verify-full", "verify-ca", "require":
+	case "verify-full", "verify-ca":
 		return nil
-	case "disable", "allow", "prefer", "":
-		return errors.New("remote database host requires TLS enforcement (sslmode=verify-full, verify-ca, or require; disable, allow, and prefer are refused for non-local hosts)")
+	case "disable", "allow", "prefer", "require", "":
+		return errors.New("remote database host requires verified TLS (sslmode=verify-full or verify-ca; disable, allow, prefer and require are refused for non-local hosts)")
 	default:
 		return fmt.Errorf("unknown sslmode %q for remote database host", sslmode)
 	}
 }
 
 func isLocalOrComposeHost(host string) bool {
+	if strings.HasPrefix(strings.TrimSpace(host), "/") {
+		return true // a Unix socket directory, e.g. /cloudsql/<project>:<region>:<instance>
+	}
 	h := strings.Trim(strings.TrimSpace(host), "[]")
 	if sh, _, err := net.SplitHostPort(h); err == nil {
 		h = sh

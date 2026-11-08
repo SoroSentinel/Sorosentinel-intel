@@ -30,7 +30,10 @@ func TestValidateDatabaseURL(t *testing.T) {
 		{"remote DSN without sslmode", "host=sql.example.com user=intel", true},
 
 		// Remote hosts with TLS enforcement accepted
-		{"remote host with sslmode=require", "postgres://user:pass@10.0.0.5:5432/intel?sslmode=require", false},
+		{"remote host with sslmode=require (no certificate check)", "postgres://user:pass@10.0.0.5:5432/intel?sslmode=require", true},
+		{"remote DSN with sslmode=require", "host=sql.example.com sslmode=require", true},
+		{"Cloud SQL Unix socket in the URL", "postgres://intel:pass@/intel?host=/cloudsql/proj:europe-west1:intel", false},
+		{"Unix socket DSN", "host=/var/run/postgresql user=intel dbname=intel", false},
 		{"remote host with sslmode=verify-ca", "postgres://user:pass@sql.example.com:5432/intel?sslmode=verify-ca", false},
 		{"remote host with sslmode=verify-full", "postgres://user:pass@sql.example.com:5432/intel?sslmode=verify-full", false},
 		{"remote DSN with verify-full", "host=sql.example.com sslmode=verify-full", false},
