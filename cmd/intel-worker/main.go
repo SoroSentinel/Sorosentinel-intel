@@ -154,7 +154,11 @@ func run(ctx context.Context, cfg config, log *slog.Logger) error {
 		return err
 	}
 
-	pool, err := pgxpool.New(ctx, os.Getenv(dbEnv))
+	dbURL := os.Getenv(dbEnv)
+	if err := store.ValidateDatabaseURL(dbURL); err != nil {
+		return fmt.Errorf("worker: %w", err)
+	}
+	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
 		return errors.New("worker: database config invalid") // the error may echo the URL
 	}
