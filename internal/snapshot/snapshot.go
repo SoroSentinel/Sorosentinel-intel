@@ -20,8 +20,12 @@ import (
 
 const (
 	FormatVersion = 1
-	// MaxEntries bounds a snapshot (ARCHITECTURE §17 OE4: at most ~10^7 entries).
-	MaxEntries = 10_000_000
+	// MaxEntries bounds a snapshot. It must equal Guard's MAX_ENTRIES
+	// (packages/core/src/intel/snapshot.ts): Guard refuses anything larger as
+	// malformed, so a bigger snapshot here would leave every wallet unchecked.
+	// ARCHITECTURE §17 OE4 sized the format for ~10^7; v1 caps it at 10^6 so a
+	// wallet can parse it before the signature check without freezing.
+	MaxEntries = 1_000_000
 	magic      = "SOROSENTINEL-SNAPSHOT-V1\n"
 )
 
